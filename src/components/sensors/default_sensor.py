@@ -9,7 +9,7 @@ import pygame
 
 from src.components.sensors.sensor import Cords, Sensor
 from src.engine.geo_color import Colors
-from src.engine.grid import Grid
+from src.engine.grid import PatchesGrid
 
 
 class DefaultSensor(Sensor[float]):
@@ -78,7 +78,7 @@ class DefaultSensor(Sensor[float]):
         self._message_queue = deepcopy(self._pending_message_queue)
         self._pending_message_queue = []
 
-    def _draw(self, surface: pygame.Surface, offset: Grid) -> None:
+    def _draw(self, surface: pygame.Surface, offset: PatchesGrid) -> None:
         dot_radius = 5
         dot_color = self._current_color
 

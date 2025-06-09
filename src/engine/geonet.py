@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import pygame
 
 from src.components.sensor_manager import SensorManager
-from src.engine.grid import Grid
+from src.engine.grid import PatchesGrid
 
 
 @dataclass(frozen=True)
@@ -35,13 +35,13 @@ class GeoNetEngine:
             (self._cfg.screen_width, self._cfg.screen_heigth), pygame.DOUBLEBUF
         )
 
-        self._grid = Grid(
+        self._grid = PatchesGrid(
             screen_width=self._cfg.screen_width,
             screen_height=self._cfg.screen_heigth,
             grid_size=self._cfg.grid_size,
             grid_margin=self._cfg.grid_margin,
         )
-        self._sensor_manager = SensorManager()
+        self._sensor_manager = SensorManager(self._grid)
 
     def _handle_events(self) -> None:
         for event in pygame.event.get():
@@ -56,12 +56,14 @@ class GeoNetEngine:
 
     def _draw(self) -> None:
         self._screen.fill((20, 20, 20))
-        self._grid.draw(self._screen)
-        self._sensor_manager._draw(self._screen, self._grid)
+        self._grid._draw(self._screen)
+        self._sensor_manager._draw(self._screen)
         pygame.display.flip()
 
-    def main_loop(self, base_scenario: Callable[[SensorManager], None]) -> None:
-        base_scenario(self._sensor_manager)
+    def main_loop(
+        self, base_scenario: Callable[[SensorManager, PatchesGrid], None]
+    ) -> None:
+        base_scenario(self._sensor_manager, self._grid)
         last_draw_time = pygame.time.get_ticks()
         first_draw = True
         while not self._quit:

@@ -6,7 +6,7 @@ from typing import Any, Generic, TypeVar
 
 import pygame
 
-from src.engine.grid import Grid
+from src.engine.grid import PatchesGrid
 
 
 T = TypeVar("T")
@@ -38,7 +38,7 @@ class Sensor(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def _draw(self, screen: pygame.Surface, offset: Grid) -> None:
+    def _draw(self, screen: pygame.Surface, offset: PatchesGrid) -> None:
         """Draws the instance of this sensor"""
 
 
