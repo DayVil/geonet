@@ -1,0 +1,74 @@
+name: Code Quality with Ruff
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ruff-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install Ruff
+      run: pip install ruff
+      
+    - name: Run Ruff linter
+      run: ruff check .
+      
+    - name: Check formatting with Ruff
+      run: ruff format --check --diff .
+      continue-on-error: true
+
+  ruff-format:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && always()
+    needs: ruff-check
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install Ruff
+      run: pip install ruff
+        
+    - name: Format code with Ruff
+      run: |
+        echo "Checking if formatting is needed..."
+        ruff check --fix .
+        ruff format .
+        
+    - name: Check for changes and commit
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Check if there are any changes
+        if [[ -n $(git status --porcelain) ]]; then
+          echo "Changes detected, committing..."
+          
+          # Get the previous commit message
+          PREV_COMMIT_MSG=$(git log -1 --pretty=%B)
+          NEW_COMMIT_MSG="${PREV_COMMIT_MSG} [ruff fix/format]"
+          
+          git add -A
+          git commit -m "$NEW_COMMIT_MSG"
+          git push
+          echo "Changes committed and pushed with message: $NEW_COMMIT_MSG"
+        else
+          echo "No changes to commit"
+        fi
