@@ -1,4 +1,5 @@
 from collections.abc import Callable, Sequence
+from itertools import combinations
 
 import networkx as nx
 import pygame
@@ -69,7 +70,7 @@ class SensorManager:
                 sensor1.id(),
                 sensor2.id(),
                 weight=dist,
-                is_transmitting=False,  # Track if currently transmitting
+                is_transmitting=False,
             )
 
     def connect_sensors_chain(
@@ -99,6 +100,16 @@ class SensorManager:
 
         for sensor in sensor_buffer:
             self.connect_sensors(center_sensor, sensor, distance_metric)
+
+    def connect_sensors_if(
+        self,
+        sensors: Sequence[Sensor],
+        condition: Callable[[Sensor, Sensor, Sequence[Sensor] | None], bool],
+        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+    ) -> None:
+        for sensor1, sensor2 in combinations(sensors, 2):
+            if condition(sensor1, sensor2, sensors):
+                self.connect_sensors(sensor1, sensor2, distance_metric)
 
     # =======================
     # DO NOT USE
