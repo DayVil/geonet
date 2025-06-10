@@ -52,7 +52,7 @@ class PatchesGrid:
             x = self._offset_x + i * self._cell_size
             pygame.draw.line(
                 screen,
-                Colors.LIGHT_GRAY,
+                Colors.LIGHT_GRAY.to_tuple(),
                 (x, self._offset_y),
                 (x, self._offset_y + self._grid_height),
                 1,
@@ -63,7 +63,7 @@ class PatchesGrid:
             y = self._offset_y + i * self._cell_size
             pygame.draw.line(
                 screen,
-                Colors.LIGHT_GRAY,
+                Colors.LIGHT_GRAY.to_tuple(),
                 (self._offset_x, y),
                 (self._offset_x + self._grid_width, y),
                 1,
@@ -72,7 +72,7 @@ class PatchesGrid:
         # Draw grid border
         pygame.draw.rect(
             screen,
-            Colors.GRAY,
+            Colors.GRAY.to_tuple(),
             (
                 self._offset_x,
                 self._offset_y,
