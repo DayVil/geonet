@@ -1,4 +1,6 @@
-from src.components.sensor_connection_utils import udg_connection_autotune
+from src.components.sensor_connection_utils import (
+    gg_connection,
+)
 from src.components.sensor_manager import SensorManager
 from src.components.sensors.default_sensor import DefaultSensor, create_default_sensors
 from src.engine.geo_color import Colors
@@ -23,14 +25,14 @@ def on_write(sensor: DefaultSensor, value: list[float]) -> None:
 
 def scenario(manager: SensorManager, patches: PatchesGrid) -> None:
     sensors = create_default_sensors(
-        amount=100,
+        amount=80,
         grid=patches,
         initial_state={"state": "IDLE"},
         on_read=on_read,
         on_write=on_write,
     )
     manager.append_multiple_sensors(sensors)
-    manager.connect_sensors_if(sensors, udg_connection_autotune(manager, sensors))
+    manager.connect_sensors_if(sensors, gg_connection(sensors))
 
     sensors[0].write([1])
 

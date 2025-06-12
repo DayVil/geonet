@@ -92,10 +92,13 @@ class DefaultSensor(Sensor[float]):
     def __str__(self) -> str:
         return f"DefualtSensor: \n\tid = {self._id}\n\tcords = {self._cords}"
 
+    def __eq__(self, other: DefaultSensor) -> bool:
+        if not isinstance(other, DefaultSensor):
+            return False
+        return self._id == other._id
 
-# @dataclass(frozen=True)
-# class DefualtSensorConfig:
-#     color_inactive:
+    def __hash__(self) -> int:
+        return hash(self._id)
 
 
 def create_default_sensors(
