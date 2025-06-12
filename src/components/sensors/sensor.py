@@ -27,11 +27,11 @@ class Sensor(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def read(self) -> T:
+    def receive(self) -> T:
         pass
 
     @abstractmethod
-    def write(self, value: T) -> None:
+    def transmit(self, value: T) -> None:
         pass
 
     @abstractmethod

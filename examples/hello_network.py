@@ -5,7 +5,7 @@ from src.engine.geonet import GeoNetEngine
 from src.engine.grid import PatchesGrid
 
 
-def on_read(sensor: DefaultSensor, value: list[float]) -> list[float]:
+def on_receive(sensor: DefaultSensor, value: list[float]) -> list[float]:
     if len(value) == 0:
         sensor.set_color(Colors.CYAN)
         return []
@@ -14,7 +14,7 @@ def on_read(sensor: DefaultSensor, value: list[float]) -> list[float]:
         return value
 
 
-def on_write(sensor: DefaultSensor, value: list[float]) -> None:
+def on_transmit(sensor: DefaultSensor, value: list[float]) -> None:
     if sensor.state["state"] == "IDLE":
         sensor.write_to_mem(value)
         sensor.state["state"] = "SEND"
@@ -22,15 +22,17 @@ def on_write(sensor: DefaultSensor, value: list[float]) -> None:
 
 def scenario(manager: SensorManager, patches: PatchesGrid) -> None:
     sensors = create_default_sensors(
-        amount=50,
+        amount=20,
         grid=patches,
         initial_state={"state": "IDLE"},
-        on_read=on_read,
-        on_write=on_write,
+        on_receive=on_receive,
+        on_transmit=on_transmit,
     )
     manager.append_multiple_sensors(sensors)
+    manager.connect_sensors_chain(sensors)
+    manager.connect_sensors_star(sensors[10], sensors[11:15])
 
-    sensors[0].write([1])
+    sensors[0].transmit([1])
 
 
 def main():

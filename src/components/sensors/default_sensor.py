@@ -18,15 +18,15 @@ class DefaultSensor(Sensor[float]):
         self,
         cords: Cords,
         initial_state: dict[Any, Any] | None = None,
-        on_read: Callable[[DefaultSensor, list[float]], list[float]] | None = None,
-        on_write: Callable[[DefaultSensor, list[float]], None] | None = None,
+        on_receive: Callable[[DefaultSensor, list[float]], list[float]] | None = None,
+        on_transmit: Callable[[DefaultSensor, list[float]], None] | None = None,
     ) -> None:
         super().__init__()
         self._id = uuid.uuid4()
         self._cords = cords
         self._current_color = Colors.CYAN
-        self._on_read = on_read
-        self._on_write = on_write
+        self._on_receive = on_receive
+        self._on_transmit = on_transmit
 
         self._message_queue: list[float] = []
         self._pending_message_queue: list[float] = []
@@ -44,22 +44,22 @@ class DefaultSensor(Sensor[float]):
     def set_position(self, cords: Cords):
         self._cords = deepcopy(cords)
 
-    def read(self) -> list[float]:
+    def receive(self) -> list[float]:
         msgs = deepcopy(self._message_queue)
         if len(msgs) == 0:
             return []
 
         self._message_queue = []
-        if self._on_read is not None:
-            return self._on_read(self, msgs)
+        if self._on_receive is not None:
+            return self._on_receive(self, msgs)
         return []
 
-    def write(self, value: list[float]) -> None:
+    def transmit(self, value: list[float]) -> None:
         if len(value) == 0:
             return
 
-        if self._on_write is not None:
-            self._on_write(self, deepcopy(value))
+        if self._on_transmit is not None:
+            self._on_transmit(self, deepcopy(value))
 
     def write_to_mem(self, value: list[float]) -> None:
         self._pending_message_queue += value
@@ -105,8 +105,8 @@ def create_default_sensors(
     amount: int,
     grid: PatchesGrid,
     initial_state: dict[Any, Any] | None = None,
-    on_read: Callable[[DefaultSensor, list[float]], list[float]] | None = None,
-    on_write: Callable[[DefaultSensor, list[float]], None] | None = None,
+    on_receive: Callable[[DefaultSensor, list[float]], list[float]] | None = None,
+    on_transmit: Callable[[DefaultSensor, list[float]], None] | None = None,
 ) -> list[DefaultSensor]:
     width = grid._grid_size - 1
     height = width
@@ -125,8 +125,8 @@ def create_default_sensors(
         DefaultSensor(
             cords=Cords(cord[0], cord[1]),
             initial_state=initial_state,
-            on_read=on_read,
-            on_write=on_write,
+            on_receive=on_receive,
+            on_transmit=on_transmit,
         )
         for cord in cords
     ]

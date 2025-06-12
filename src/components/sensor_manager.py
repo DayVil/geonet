@@ -183,9 +183,9 @@ class SensorManager:
         self._reset_transmissions()
 
         for sensor in self.list_sensors():
-            data = sensor.read()
+            data = sensor.receive()
             connected_sensors = self.get_connected_sensors(sensor)
             for connected_sensor in connected_sensors:
                 if len(data) > 0:
                     self._mark_transmission(sensor.id(), connected_sensor.id())
-                    connected_sensor.write(data)
+                    connected_sensor.transmit(data)
