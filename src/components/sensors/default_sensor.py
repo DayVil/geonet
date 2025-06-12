@@ -83,7 +83,7 @@ class DefaultSensor(Sensor[float]):
         dot_radius = 5
         dot_color = self._current_color
 
-        true_pos = offset.grid_to_pixel(self._cords.x, self._cords.y)
+        true_pos = offset.grid_to_pixel(int(self._cords.x), int(self._cords.y))
         pygame.draw.circle(surface, dot_color.to_tuple(), true_pos, dot_radius)
 
     def __repr__(self) -> str:
