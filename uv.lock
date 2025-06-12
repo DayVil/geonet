@@ -59,7 +59,7 @@ wheels = [
 [[package]]
 name = "geonet"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "icecream" },
     { name = "networkx" },

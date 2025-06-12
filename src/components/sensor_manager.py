@@ -73,6 +73,14 @@ class SensorManager:
                 is_transmitting=False,
             )
 
+    def connect_sensors_mesh(
+        self,
+        sensors: Sequence[Sensor],
+        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+    ) -> None:
+        for sensor1, sensor2 in combinations(sensors, 2):
+            self.connect_sensors(sensor1, sensor2, distance_metric)
+
     def connect_sensors_chain(
         self,
         sensors: Sequence[Sensor],
@@ -104,12 +112,25 @@ class SensorManager:
     def connect_sensors_if(
         self,
         sensors: Sequence[Sensor],
-        condition: Callable[[Sensor, Sensor, Sequence[Sensor] | None], bool],
+        condition: Callable[[Sensor, Sensor], bool],
         distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
     ) -> None:
         for sensor1, sensor2 in combinations(sensors, 2):
-            if condition(sensor1, sensor2, sensors):
+            if condition(sensor1, sensor2):
                 self.connect_sensors(sensor1, sensor2, distance_metric)
+
+    def disconnect_sensors(self, sensor1: Sensor, sensor2: Sensor) -> None:
+        if sensor1.id() not in self._nx_graph:
+            self.append_sensor(sensor1)
+
+        if sensor2.id() not in self._nx_graph:
+            self.append_sensor(sensor2)
+
+        self._nx_graph.remove_edge(sensor1.id(), sensor2.id())
+
+    def disconnect_multiple_sensors(self, sensors: Sequence[Sensor]) -> None:
+        for sensor1, sensor2 in combinations(sensors, 2):
+            self.disconnect_sensors(sensor1, sensor2)
 
     # =======================
     # DO NOT USE

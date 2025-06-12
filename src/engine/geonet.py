@@ -15,7 +15,7 @@ class GeoNetConfig:
     screen_width: int = 1000
     screen_heigth: int = 800
 
-    grid_size: int = 40
+    grid_size: int = 55
     grid_margin: int = 10
 
     fps: int = 60
