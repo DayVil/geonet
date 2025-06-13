@@ -23,7 +23,7 @@ def on_transmit(sensor: DefaultSensor, value: list[float]) -> None:
 
 def scenario(manager: SensorManager, patches: PatchesGrid) -> None:
     sensors = create_default_sensors(
-        amount=20,
+        amount=70,
         grid=patches,
         initial_state={"state": "IDLE"},
         on_receive=on_receive,
