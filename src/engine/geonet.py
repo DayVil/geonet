@@ -58,7 +58,11 @@ class GeoNetEngine:
                     if is_valid:
                         print(f"Clicked grid position: {grid_pos}")
 
-    def _update(self) -> None:
+    def _update(
+        self, update_fn: Callable[[SensorManager, PatchesGrid], None] | None
+    ) -> None:
+        if update_fn is not None:
+            update_fn(self._sensor_manager, self._grid)
         self._sensor_manager._update()
 
     def _draw(self) -> None:
@@ -68,9 +72,12 @@ class GeoNetEngine:
         pygame.display.flip()
 
     def main_loop(
-        self, base_scenario: Callable[[SensorManager, PatchesGrid], None]
+        self,
+        setup_fn: Callable[[SensorManager, PatchesGrid], None] | None = None,
+        update_fn: Callable[[SensorManager, PatchesGrid], None] | None = None,
     ) -> None:
-        base_scenario(self._sensor_manager, self._grid)
+        if setup_fn is not None:
+            setup_fn(self._sensor_manager, self._grid)
         last_draw_time = pygame.time.get_ticks()
         first_draw = True
         while not self._quit:
@@ -79,7 +86,7 @@ class GeoNetEngine:
             # Only execute every second (1000 milliseconds)
             current_time = pygame.time.get_ticks()
             if current_time - last_draw_time >= 1000 or first_draw:
-                self._update()
+                self._update(update_fn)
                 self._draw()
                 last_draw_time = current_time
                 first_draw = False

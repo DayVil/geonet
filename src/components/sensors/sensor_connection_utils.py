@@ -48,12 +48,12 @@ def gg_connection(sensors: list[Sensor]) -> Callable[[Sensor, Sensor], bool]:
         sensor1: Sensor,
         sensor2: Sensor,
     ) -> bool:
-        center_point = sensor1.position().mid_pos(sensor2.position())
-        radius = sensor1.position().euclid_distance(center_point)
+        center_point = sensor1.position.mid_pos(sensor2.position)
+        radius = sensor1.position.euclid_distance(center_point)
         for sensor in sensors:
             if sensor is sensor1 or sensor is sensor2:
                 continue
-            if sensor.position().euclid_distance(center_point) <= radius:
+            if sensor.position.euclid_distance(center_point) <= radius:
                 return False
         return True
 

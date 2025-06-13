@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 import random
-from typing import Any
+from typing import Any, Generic, TypeVar
 import uuid
 
 import pygame
@@ -13,15 +13,19 @@ from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
 
 
-class Sensor:
+T = TypeVar("T")
+
+
+class Sensor(Generic[T]):
     def __init__(
         self,
         cords: Coordinates,
         patches: PatchesGrid,
-        initial_state: dict[Any, Any] | None = None,
-        on_receive: Callable[[Sensor, list[float]], list[float]] | None = None,
-        on_transmit: Callable[[Sensor, list[float]], None] | None = None,
-        on_measurement_change: Callable[[Sensor, Color], None] | None = None,
+        initial_state: T = None,
+        on_receive: Callable[[Sensor[T], list[float]], list[float]] = lambda _,
+        value: value,
+        on_transmit: Callable[[Sensor[T], list[float]], None] | None = None,
+        on_measurement_change: Callable[[Sensor[T], Color], None] | None = None,
     ) -> None:
         super().__init__()
         self._id = uuid.uuid4()
@@ -35,35 +39,39 @@ class Sensor:
         self._message_queue: list[float] = []
         self._pending_message_queue: list[float] = []
 
-        if initial_state is None:
-            initial_state = {}
-        self._state: dict[Any, Any] = deepcopy(initial_state)
+        self._state: T = deepcopy(initial_state)
 
         self._current_patch_color = self._grid.get_color(self._cords)
-
-    # =======================
-    # Atomic sensor opertations
-    # =======================
-    def id(self) -> uuid.UUID:
-        return self._id
-
-    def position(self) -> Coordinates:
-        return self._cords
-
-    def set_position(self, cords: Coordinates) -> None:
-        if not isinstance(cords, Coordinates):
-            raise ValueError("you may only use Coordinates")
-        self._cords = deepcopy(cords)
+        self._neigbours: set[Sensor[T]] = set()
+        self._marking_fn: Callable[[uuid.UUID, uuid.UUID], None] | None = None
 
     # =======================
     # Properties
     # =======================
     @property
-    def state(self):
+    def id(self) -> uuid.UUID:
+        return self._id
+
+    @property
+    def position(self) -> Coordinates:
+        return self._cords
+
+    @position.setter
+    def set_position(self, cords: Coordinates) -> None:
+        if not isinstance(cords, Coordinates):
+            raise ValueError("you may only use Coordinates")
+        self._cords = deepcopy(cords)
+
+    @property
+    def neighbours(self) -> set[Sensor[T]]:
+        return self._neigbours
+
+    @property
+    def state(self) -> T:
         return self._state
 
     @state.setter
-    def state(self, value: dict[Any, Any]):
+    def state(self, value: T):
         self._state = deepcopy(value)
 
     @property
@@ -90,9 +98,6 @@ class Sensor:
         return []
 
     def transmit(self, value: list[float]) -> None:
-        if len(value) == 0:
-            return
-
         if self._on_transmit is not None:
             self._on_transmit(self, deepcopy(value))
 
@@ -128,23 +133,24 @@ class Sensor:
     def __str__(self) -> str:
         return f"DefualtSensor: \n\tid = {self._id}\n\tcords = {self._cords}"
 
-    def __eq__(self, other: Sensor) -> bool:
+    def __eq__(self, other: Sensor[T]) -> bool:
         if not isinstance(other, Sensor):
             return False
         return self._id == other._id
 
     def __hash__(self) -> int:
-        return hash(self._id)
+        return hash(self.id)
 
 
 def create_default_sensors(
     amount: int,
     grid: PatchesGrid,
-    initial_state: dict[Any, Any] | None = None,
-    on_receive: Callable[[Sensor, list[float]], list[float]] | None = None,
-    on_transmit: Callable[[Sensor, list[float]], None] | None = None,
-    on_measurement_change: Callable[[Sensor, Color], None] | None = None,
-) -> list[Sensor]:
+    initial_state: Any = None,
+    on_receive: Callable[[Sensor[T], list[float]], list[float]] = lambda _,
+    value: value,
+    on_transmit: Callable[[Sensor[T], list[float]], None] | None = None,
+    on_measurement_change: Callable[[Sensor[T], Color], None] | None = None,
+) -> list[Sensor[T]]:
     width = grid._grid_size - 1
     height = width
 
