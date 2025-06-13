@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 import pygame
 
-from src.components.sensor_manager import SensorManager
-from src.engine.geo_color import Colors
+from src.components.sensors.sensor_manager import SensorManager
+from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
 
 
@@ -62,7 +62,7 @@ class GeoNetEngine:
         self._sensor_manager._update()
 
     def _draw(self) -> None:
-        self._screen.fill(Colors.BLACK.to_tuple())
+        self._screen.fill(Color.BLACK.to_tuple())
         self._grid._draw(self._screen)
         self._sensor_manager._draw(self._screen)
         pygame.display.flip()

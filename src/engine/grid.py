@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pygame
 
-from src.components.sensors.sensor import Cords
+from src.components.sensors.sensor import Coordinates
 
-from .geo_color import Colors
+from .geo_color import Color
 
 
 class PatchesGrid:
@@ -25,38 +25,38 @@ class PatchesGrid:
 
         self._offset_x: int = (screen_width - self._grid_width) // 2
         self._offset_y: int = (screen_height - self._grid_height) // 2
-        self._cell_colors: dict[Cords, Colors] = {}
-        self.fill_grid(Colors.BLACK)
+        self._cell_colors: dict[Coordinates, Color] = {}
+        self.fill_grid(Color.BLACK)
 
     # =======================
     # Fetch cell information
     # =======================
-    def get_color(self, cord: Cords) -> Colors:
+    def get_color(self, cord: Coordinates) -> Color:
         self._verify_cords(cord)
         return self._cell_colors[cord]
 
     # =======================
     # Settings of Cells
     # =======================
-    def set_color(self, cords: Cords, color: Colors) -> None:
+    def set_color(self, cords: Coordinates, color: Color) -> None:
         self._verify_cords(cords)
         self._cell_colors[cords] = color
 
     def set_color_rect(
-        self, starting_point: Cords, width: int, height: int, color: Colors
+        self, starting_point: Coordinates, width: int, height: int, color: Color
     ) -> None:
         for w in range(width):
             for h in range(height):
-                current_cord = Cords(
+                current_cord = Coordinates(
                     x=starting_point.x + w,
                     y=starting_point.y + h,
                 )
                 self._verify_cords(current_cord)
                 self.set_color(current_cord, color)
 
-    def fill_grid(self, color: Colors) -> None:
+    def fill_grid(self, color: Color) -> None:
         self.set_color_rect(
-            starting_point=Cords(0, 0),
+            starting_point=Coordinates(0, 0),
             width=self._grid_size,
             height=self._grid_size,
             color=color,
@@ -67,12 +67,12 @@ class PatchesGrid:
     # =======================
     def grid_to_pixel(self, grid_x: int, grid_y: int) -> tuple[float, float]:
         """Convert grid coordinates to pixel coordinates (center of cell)"""
-        self._verify_cords(Cords(grid_x, grid_y))
+        self._verify_cords(Coordinates(grid_x, grid_y))
         pixel_x = int(self._offset_x + (grid_x + 0.5) * self._cell_size)
         pixel_y = int(self._offset_y + (grid_y + 0.5) * self._cell_size)
         return pixel_x, pixel_y
 
-    def pixel_to_grid(self, x: float, y: float) -> tuple[bool, Cords]:
+    def pixel_to_grid(self, x: float, y: float) -> tuple[bool, Coordinates]:
         """Convert pixel coordinates to grid coordinates."""
         if (
             x < self._offset_x
@@ -80,23 +80,23 @@ class PatchesGrid:
             or y < self._offset_y
             or y >= self._offset_y + self._grid_height
         ):
-            return False, Cords(0, 0)
+            return False, Coordinates(0, 0)
         grid_x = int((x - self._offset_x) / self._cell_size)
         grid_y = int((y - self._offset_y) / self._cell_size)
 
         try:
-            self._verify_cords(Cords(grid_x, grid_y))
-            return True, Cords(grid_x, grid_y)
+            self._verify_cords(Coordinates(grid_x, grid_y))
+            return True, Coordinates(grid_x, grid_y)
         except ValueError:
-            return False, Cords(0, 0)
+            return False, Coordinates(0, 0)
 
     # =======================
     # DO NOT USE
     # =======================
-    def _verify_cords(self, cord: Cords) -> None:
-        if not isinstance(cord, Cords):
+    def _verify_cords(self, cord: Coordinates) -> None:
+        if not isinstance(cord, Coordinates):
             raise ValueError(
-                f"cord may only be of type Cords but received: {type(cord)}"
+                f"cord may only be of type Coordinates but received: {type(cord)}"
             )
         if self._grid_size <= cord.x or cord.x < 0:
             raise ValueError(
@@ -123,7 +123,7 @@ class PatchesGrid:
             x = self._offset_x + i * self._cell_size
             pygame.draw.line(
                 screen,
-                Colors.LIGHT_GRAY.to_tuple(),
+                Color.LIGHT_GRAY.to_tuple(),
                 (x, self._offset_y),
                 (x, self._offset_y + self._grid_height),
                 1,
@@ -134,7 +134,7 @@ class PatchesGrid:
             y = self._offset_y + i * self._cell_size
             pygame.draw.line(
                 screen,
-                Colors.LIGHT_GRAY.to_tuple(),
+                Color.LIGHT_GRAY.to_tuple(),
                 (self._offset_x, y),
                 (self._offset_x + self._grid_width, y),
                 1,
@@ -143,7 +143,7 @@ class PatchesGrid:
         # Draw grid border
         pygame.draw.rect(
             screen,
-            Colors.GRAY.to_tuple(),
+            Color.GRAY.to_tuple(),
             (
                 self._offset_x,
                 self._offset_y,

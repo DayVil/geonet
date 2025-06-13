@@ -2,10 +2,9 @@ from collections.abc import Callable
 
 import networkx as nx
 
-from src.components.sensor_manager import SensorManager
-from src.components.sensor_math import euclid_distance
-from src.components.sensors.default_sensor import DefaultSensor
 from src.components.sensors.sensor import Sensor
+from src.components.sensors.sensor_manager import SensorManager
+from src.components.sensors.sensor_math import euclid_distance
 
 
 def udg_connection(distance: int) -> Callable[[Sensor, Sensor], bool]:
@@ -23,7 +22,7 @@ def udg_connection(distance: int) -> Callable[[Sensor, Sensor], bool]:
 
 
 def udg_connection_autotune(
-    manager: SensorManager, sensors: list[DefaultSensor]
+    manager: SensorManager, sensors: list[Sensor]
 ) -> Callable[[Sensor, Sensor], bool]:
     manager.connect_sensors_mesh(sensors)
     network = manager._nx_graph
@@ -44,7 +43,7 @@ def udg_connection_autotune(
     return udg_connection_stub
 
 
-def gg_connection(sensors: list[DefaultSensor]) -> Callable[[Sensor, Sensor], bool]:
+def gg_connection(sensors: list[Sensor]) -> Callable[[Sensor, Sensor], bool]:
     def gg_connection_stub(
         sensor1: Sensor,
         sensor2: Sensor,

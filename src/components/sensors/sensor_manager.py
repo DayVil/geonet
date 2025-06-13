@@ -4,11 +4,10 @@ from itertools import combinations
 import networkx as nx
 import pygame
 
-from src.components.sensor_math import euclid_distance
-from src.engine.geo_color import Colors
+from src.components.sensors.sensor import Sensor
+from src.components.sensors.sensor_math import euclid_distance
+from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
-
-from .sensors.sensor import Sensor
 
 
 class SensorManager:
@@ -160,10 +159,10 @@ class SensorManager:
 
             is_transmitting = edge_data.get("is_transmitting", False)
             if is_transmitting:
-                color = Colors.WHITE
+                color = Color.WHITE
                 line_width = 4
             else:
-                color = Colors.CONNECTION_GRAY
+                color = Color.CONNECTION_GRAY
                 line_width = 2
 
             pygame.draw.line(
