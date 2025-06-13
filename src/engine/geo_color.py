@@ -19,6 +19,14 @@ class Colors:
     RED: ClassVar[Colors]
     BLUE: ClassVar[Colors]
     CYAN: ClassVar[Colors]
+    CREAM: ClassVar[Colors]
+    SAGE: ClassVar[Colors]
+    LAVENDER: ClassVar[Colors]
+    SAND: ClassVar[Colors]
+    MINT: ClassVar[Colors]
+    DUSTY_ROSE: ClassVar[Colors]
+    NAVY: ClassVar[Colors]
+    FOREST: ClassVar[Colors]
 
     def __post_init__(self) -> None:
         if self.r > 255 or self.g > 255 or self.b > 255:
@@ -44,3 +52,12 @@ Colors.GREEN = Colors(0, 255, 0)
 Colors.RED = Colors(255, 100, 100)
 Colors.BLUE = Colors(100, 100, 255)
 Colors.CYAN = Colors(0, 255, 255)
+
+Colors.CREAM = Colors(245, 245, 220)
+Colors.SAGE = Colors(188, 184, 138)
+Colors.LAVENDER = Colors(230, 230, 250)
+Colors.SAND = Colors(194, 178, 128)
+Colors.MINT = Colors(152, 255, 152)
+Colors.DUSTY_ROSE = Colors(220, 180, 180)
+Colors.NAVY = Colors(0, 0, 128)
+Colors.FOREST = Colors(34, 139, 34)

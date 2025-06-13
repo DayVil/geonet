@@ -26,6 +26,14 @@ class PatchesGrid:
         self._offset_x: int = (screen_width - self._grid_width) // 2
         self._offset_y: int = (screen_height - self._grid_height) // 2
         self._cell_colors: dict[Cords, Colors] = {}
+        self.fill_grid(Colors.BLACK)
+
+    # =======================
+    # Fetch cell information
+    # =======================
+    def get_color(self, cord: Cords) -> Colors:
+        self._verify_cords(cord)
+        return self._cell_colors[cord]
 
     # =======================
     # Settings of Cells
@@ -64,10 +72,32 @@ class PatchesGrid:
         pixel_y = int(self._offset_y + (grid_y + 0.5) * self._cell_size)
         return pixel_x, pixel_y
 
+    def pixel_to_grid(self, x: float, y: float) -> tuple[bool, Cords]:
+        """Convert pixel coordinates to grid coordinates."""
+        if (
+            x < self._offset_x
+            or x >= self._offset_x + self._grid_width
+            or y < self._offset_y
+            or y >= self._offset_y + self._grid_height
+        ):
+            return False, Cords(0, 0)
+        grid_x = int((x - self._offset_x) / self._cell_size)
+        grid_y = int((y - self._offset_y) / self._cell_size)
+
+        try:
+            self._verify_cords(Cords(grid_x, grid_y))
+            return True, Cords(grid_x, grid_y)
+        except ValueError:
+            return False, Cords(0, 0)
+
     # =======================
     # DO NOT USE
     # =======================
     def _verify_cords(self, cord: Cords) -> None:
+        if not isinstance(cord, Cords):
+            raise ValueError(
+                f"cord may only be of type Cords but received: {type(cord)}"
+            )
         if self._grid_size <= cord.x or cord.x < 0:
             raise ValueError(
                 f"Please stay inside the width confines of inclusive 0 to exclusive {self._grid_size} your value was {cord.x}"

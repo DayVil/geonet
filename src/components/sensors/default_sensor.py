@@ -21,6 +21,7 @@ class DefaultSensor(Sensor[float]):
         initial_state: dict[Any, Any] | None = None,
         on_receive: Callable[[DefaultSensor, list[float]], list[float]] | None = None,
         on_transmit: Callable[[DefaultSensor, list[float]], None] | None = None,
+        on_measurement_change: Callable[[DefaultSensor, Colors], None] | None = None,
     ) -> None:
         super().__init__()
         self._id = uuid.uuid4()
@@ -29,6 +30,7 @@ class DefaultSensor(Sensor[float]):
         self._current_color = Colors.CYAN
         self._on_receive = on_receive
         self._on_transmit = on_transmit
+        self._on_measurement_change = on_measurement_change
 
         self._message_queue: list[float] = []
         self._pending_message_queue: list[float] = []
@@ -36,6 +38,8 @@ class DefaultSensor(Sensor[float]):
         if initial_state is None:
             initial_state = {}
         self._state: dict[Any, Any] = deepcopy(initial_state)
+
+        self._current_patch_color = self._grid.get_color(self._cords)
 
     # =======================
     # Atomic sensor opertations
@@ -92,7 +96,16 @@ class DefaultSensor(Sensor[float]):
         if self._on_transmit is not None:
             self._on_transmit(self, deepcopy(value))
 
-    def write_to_mem(self, value: list[float]) -> None:
+    def measurement_update(self, color: Colors) -> None:
+        if self._current_patch_color == color:
+            return
+
+        if self._on_measurement_change is not None:
+            self._on_measurement_change(self, color)
+
+        self._current_patch_color = deepcopy(color)
+
+    def write_to_transmit_buffer(self, value: list[float]) -> None:
         self._pending_message_queue += value
 
     # =======================
@@ -130,6 +143,7 @@ def create_default_sensors(
     initial_state: dict[Any, Any] | None = None,
     on_receive: Callable[[DefaultSensor, list[float]], list[float]] | None = None,
     on_transmit: Callable[[DefaultSensor, list[float]], None] | None = None,
+    on_measurement_change: Callable[[DefaultSensor, Colors], None] | None = None,
 ) -> list[DefaultSensor]:
     width = grid._grid_size - 1
     height = width
@@ -151,6 +165,7 @@ def create_default_sensors(
             initial_state=initial_state,
             on_receive=on_receive,
             on_transmit=on_transmit,
+            on_measurement_change=on_measurement_change,
         )
         for cord in cords
     ]

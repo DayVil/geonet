@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import pygame
 
 from src.components.sensor_manager import SensorManager
+from src.engine.geo_color import Colors
 from src.engine.grid import PatchesGrid
 
 
@@ -50,12 +51,18 @@ class GeoNetEngine:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self._quit = True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    is_valid, grid_pos = self._grid.pixel_to_grid(mouse_x, mouse_y)
+                    if is_valid:
+                        print(f"Clicked grid position: {grid_pos}")
 
     def _update(self) -> None:
         self._sensor_manager._update()
 
     def _draw(self) -> None:
-        self._screen.fill((20, 20, 20))
+        self._screen.fill(Colors.BLACK.to_tuple())
         self._grid._draw(self._screen)
         self._sensor_manager._draw(self._screen)
         pygame.display.flip()

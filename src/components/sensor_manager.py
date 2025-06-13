@@ -183,6 +183,9 @@ class SensorManager:
         self._reset_transmissions()
 
         for sensor in self.list_sensors():
+            cell_color = self._grid.get_color(sensor.position())
+            sensor.measurement_update(cell_color)
+
             data = sensor.receive()
             connected_sensors = self.get_connected_sensors(sensor)
             for connected_sensor in connected_sensors:

@@ -19,7 +19,7 @@ def on_receive(sensor: DefaultSensor, value: list[float]) -> list[float]:
 
 def on_transmit(sensor: DefaultSensor, value: list[float]) -> None:
     if sensor.state["state"] == "IDLE":
-        sensor.write_to_mem(value)
+        sensor.write_to_transmit_buffer(value)
         sensor.state["state"] = "SEND"
 
 

@@ -6,6 +6,7 @@ from typing import Any, Generic, TypeVar
 import pygame
 
 from src.components.coordinates import Cords
+from src.engine.geo_color import Colors
 from src.engine.grid import PatchesGrid
 
 
@@ -31,6 +32,10 @@ class Sensor(ABC, Generic[T]):
 
     @abstractmethod
     def transmit(self, value: T) -> None:
+        pass
+
+    @abstractmethod
+    def measurement_update(self, color: Colors) -> None:
         pass
 
     @abstractmethod
