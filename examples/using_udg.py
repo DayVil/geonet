@@ -8,10 +8,10 @@ from src.engine.grid import PatchesGrid
 
 def on_receive(sensor: DefaultSensor, value: list[float]) -> list[float]:
     if len(value) == 0:
-        sensor.set_color(Colors.CYAN)
+        sensor.color = Colors.CYAN
         return []
     else:
-        sensor.set_color(Colors.GREEN)
+        sensor.color = Colors.GREEN
         return value
 
 

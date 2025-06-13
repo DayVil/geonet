@@ -17,6 +17,7 @@ class DefaultSensor(Sensor[float]):
     def __init__(
         self,
         cords: Cords,
+        patches: PatchesGrid,
         initial_state: dict[Any, Any] | None = None,
         on_receive: Callable[[DefaultSensor, list[float]], list[float]] | None = None,
         on_transmit: Callable[[DefaultSensor, list[float]], None] | None = None,
@@ -24,6 +25,7 @@ class DefaultSensor(Sensor[float]):
         super().__init__()
         self._id = uuid.uuid4()
         self._cords = cords
+        self._grid = patches
         self._current_color = Colors.CYAN
         self._on_receive = on_receive
         self._on_transmit = on_transmit
@@ -35,15 +37,44 @@ class DefaultSensor(Sensor[float]):
             initial_state = {}
         self._state: dict[Any, Any] = deepcopy(initial_state)
 
+    # =======================
+    # Atomic sensor opertations
+    # =======================
     def id(self) -> uuid.UUID:
         return self._id
 
     def position(self) -> Cords:
         return self._cords
 
-    def set_position(self, cords: Cords):
+    def set_position(self, cords: Cords) -> None:
+        if not isinstance(cords, Cords):
+            raise ValueError("you may only use Cords")
         self._cords = deepcopy(cords)
 
+    # =======================
+    # Properties
+    # =======================
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, value: dict[Any, Any]):
+        self._state = deepcopy(value)
+
+    @property
+    def color(self) -> Colors:
+        return self._current_color
+
+    @color.setter
+    def color(self, color: Colors):
+        if not isinstance(color, Colors):
+            raise ValueError("you may only use Colors")
+        self._current_color = color
+
+    # =======================
+    # Message passing
+    # =======================
     def receive(self) -> list[float]:
         msgs = deepcopy(self._message_queue)
         if len(msgs) == 0:
@@ -64,17 +95,9 @@ class DefaultSensor(Sensor[float]):
     def write_to_mem(self, value: list[float]) -> None:
         self._pending_message_queue += value
 
-    def set_color(self, color: Colors):
-        self._current_color = color
-
-    @property
-    def state(self):
-        return self._state
-
-    @state.setter
-    def state(self, value: dict[Any, Any]):
-        self._state = deepcopy(value)
-
+    # =======================
+    # DO NOT USE
+    # =======================
     def _flush_run(self):
         self._message_queue = deepcopy(self._pending_message_queue)
         self._pending_message_queue = []
@@ -124,6 +147,7 @@ def create_default_sensors(
     return [
         DefaultSensor(
             cords=Cords(cord[0], cord[1]),
+            patches=grid,
             initial_state=initial_state,
             on_receive=on_receive,
             on_transmit=on_transmit,
