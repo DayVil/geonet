@@ -1,5 +1,4 @@
 from enum import Enum, auto
-import random
 from typing import Any
 
 from examples.boundary_estimation.scenarios import load_random_scenario
@@ -26,23 +25,37 @@ def color_to_float(color: Color) -> float:
         return 0.0
 
 
-def on_receive(sensor: Sensor, msgs: list[float]) -> None:
-    send = sensor.state["send"]
-    if len(msgs) == 0 or send:
+def on_receive(sensor: Sensor, values: list[float]) -> None:
+    # send = sensor.state["send"]
+    if len(values) == 0:
         return
 
-    sensor.state["send"] = True
-
     state: State = sensor.state["current_state"]
+
     match state:
         case State.INIT:
-            pass
+            patch_color = sensor.sensor_reading()
+            color_value = color_to_float(patch_color)
+            sensor.state["current_state"] = State.IDLE
+            sensor.broadcast([color_value])
+
         case State.IDLE:
-            pass
+            curr_color_val = color_to_float(sensor.sensor_reading())
+            if curr_color_val == 1.0:
+                if all(val == 1.0 for val in values):
+                    sensor.color = Color.CYAN
+                else:
+                    sensor.color = Color.FOREST
+            else:
+                if all(val == 0.0 for val in values):
+                    sensor.color = Color.CREAM
+                else:
+                    sensor.color = Color.RED
+
+            sensor.state["current_state"] = State.BNDY
+
         case State.BNDY:
             pass
-
-    sensor.broadcast(msgs)
 
 
 def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
@@ -50,19 +63,20 @@ def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -
         patches.clear_color()
         load_random_scenario(patches)
 
+    sensors = manager.list_sensors()
+    if global_state["count"] % 4 == 0:
+        for sensor in sensors:
+            sensor.state["current_state"] = State.INIT
+
     global_state["count"] += 1
 
-    sensors = manager.list_sensors()
     for sensor in sensors:
         state = sensor.state["current_state"]
-        if random.random() > 0.9 and state == State.INIT:
-            patch_color = color_to_float(patches.get_color(sensor.position))
+        if state == State.INIT:
+            patch_color = color_to_float(sensor.sensor_reading())
             sensor.transmit(to_sensor=sensor, values=[patch_color])
+
     return global_state
-
-
-def on_change(sensor: Sensor, color: Color) -> None:
-    pass
 
 
 def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
@@ -71,7 +85,6 @@ def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> An
         grid=patches,
         initial_state={"current_state": State.INIT, "send": False},
         on_receive=on_receive,
-        on_measurement_change=on_change,
     )
     for sensor in sensors:
         sensor.color = Color.CREAM

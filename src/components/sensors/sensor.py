@@ -110,12 +110,17 @@ class Sensor(Generic[T]):
 
         self._current_patch_color = deepcopy(color)
 
-    def _write_to_transmit_buffer(self, value: list[float]) -> None:
-        self._pending_message_queue += value
+    def sensor_reading(self) -> Color:
+        if self._sensor_manager is not None:
+            return self._sensor_manager._grid.get_color(self.position)
+        return Color(-1, -1, -1)
 
     # =======================
     # DO NOT USE
     # =======================
+    def _write_to_transmit_buffer(self, value: list[float]) -> None:
+        self._pending_message_queue += value
+
     def _receive(self) -> None:
         msgs = deepcopy(self._message_queue)
         if len(msgs) == 0:
