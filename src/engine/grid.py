@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pygame
 
-from .geo_color import Colors
+from src.components.coordinates import Coordinates
+
+from .geo_color import Color
 
 
 class PatchesGrid:
@@ -21,38 +23,110 @@ class PatchesGrid:
         self._grid_height: int = self._grid_width
         self._cell_size: float = self._grid_width / grid_size
 
-        self._offset_x: int = (screen_width - self._grid_width) // 2
+        self._offset_x: int = (screen_width - self._grid_width) // 2 + 80
         self._offset_y: int = (screen_height - self._grid_height) // 2
+        self._cell_colors: dict[Coordinates, Color] = {}
+        self.fill_grid(Color.BLACK)
+
+    # =======================
+    # Fetch cell information
+    # =======================
+    def get_color(self, cord: Coordinates) -> Color:
+        self._verify_cords(cord)
+        return self._cell_colors[cord]
+
+    # =======================
+    # Settings of Cells
+    # =======================
+    def set_color(self, cords: Coordinates, color: Color) -> None:
+        self._verify_cords(cords)
+        self._cell_colors[cords] = color
+
+    def set_color_rect(
+        self, starting_point: Coordinates, width: int, height: int, color: Color
+    ) -> None:
+        for w in range(width):
+            for h in range(height):
+                current_cord = Coordinates(
+                    x=starting_point.x + w,
+                    y=starting_point.y + h,
+                )
+                self._verify_cords(current_cord)
+                self.set_color(current_cord, color)
+
+    def fill_grid(self, color: Color) -> None:
+        self.set_color_rect(
+            starting_point=Coordinates(0, 0),
+            width=self._grid_size,
+            height=self._grid_size,
+            color=color,
+        )
+
+    def clear_color(self) -> None:
+        self.fill_grid(Color.BLACK)
 
     # =======================
     # Positioning of Components
     # =======================
     def grid_to_pixel(self, grid_x: int, grid_y: int) -> tuple[float, float]:
         """Convert grid coordinates to pixel coordinates (center of cell)"""
-        pixel_x = self._offset_x + (grid_x + 0.5) * self._cell_size
-        pixel_y = self._offset_y + (grid_y + 0.5) * self._cell_size
-
-        if self._grid_size <= grid_x or grid_x < 0:
-            raise ValueError(
-                f"Please stay inside the width confines of inclusive 0 to exclusive {self._grid_size} your value was {grid_x}"
-            )
-        if self._grid_size <= grid_y or grid_y < 0:
-            raise ValueError(
-                f"Please stay inside the height confines of inclusive 0 to exclusive {self._grid_size} your value was {grid_y}"
-            )
+        self._verify_cords(Coordinates(grid_x, grid_y))
+        pixel_x = int(self._offset_x + (grid_x + 0.5) * self._cell_size)
+        pixel_y = int(self._offset_y + (grid_y + 0.5) * self._cell_size)
         return pixel_x, pixel_y
+
+    def pixel_to_grid(self, x: float, y: float) -> tuple[bool, Coordinates]:
+        """Convert pixel coordinates to grid coordinates."""
+        if (
+            x < self._offset_x
+            or x >= self._offset_x + self._grid_width
+            or y < self._offset_y
+            or y >= self._offset_y + self._grid_height
+        ):
+            return False, Coordinates(0, 0)
+        grid_x = int((x - self._offset_x) / self._cell_size)
+        grid_y = int((y - self._offset_y) / self._cell_size)
+
+        try:
+            self._verify_cords(Coordinates(grid_x, grid_y))
+            return True, Coordinates(grid_x, grid_y)
+        except ValueError:
+            return False, Coordinates(0, 0)
 
     # =======================
     # DO NOT USE
     # =======================
+    def _verify_cords(self, cord: Coordinates) -> None:
+        if not isinstance(cord, Coordinates):
+            raise ValueError(
+                f"cord may only be of type Coordinates but received: {type(cord)}"
+            )
+        if self._grid_size <= cord.x or cord.x < 0:
+            raise ValueError(
+                f"Please stay inside the width confines of inclusive 0 to exclusive {self._grid_size} your value was {cord.x}"
+            )
+        if self._grid_size <= cord.y or cord.y < 0:
+            raise ValueError(
+                f"Please stay inside the height confines of inclusive 0 to exclusive {self._grid_size} your value was {cord.y}"
+            )
+
     def _draw(self, screen: pygame.Surface) -> None:
         """Draw the grid lines"""
+        # Fill cells with their colors
+        for cords, color in self._cell_colors.items():
+            rect = pygame.Rect(
+                self._offset_x + cords.x * self._cell_size,
+                self._offset_y + cords.y * self._cell_size,
+                self._cell_size,
+                self._cell_size,
+            )
+            pygame.draw.rect(screen, color.to_tuple(), rect)
         # Draw vertical lines
         for i in range(self._grid_size + 1):
             x = self._offset_x + i * self._cell_size
             pygame.draw.line(
                 screen,
-                Colors.LIGHT_GRAY.to_tuple(),
+                Color.LIGHT_GRAY.to_tuple(),
                 (x, self._offset_y),
                 (x, self._offset_y + self._grid_height),
                 1,
@@ -63,7 +137,7 @@ class PatchesGrid:
             y = self._offset_y + i * self._cell_size
             pygame.draw.line(
                 screen,
-                Colors.LIGHT_GRAY.to_tuple(),
+                Color.LIGHT_GRAY.to_tuple(),
                 (self._offset_x, y),
                 (self._offset_x + self._grid_width, y),
                 1,
@@ -72,7 +146,7 @@ class PatchesGrid:
         # Draw grid border
         pygame.draw.rect(
             screen,
-            Colors.GRAY.to_tuple(),
+            Color.GRAY.to_tuple(),
             (
                 self._offset_x,
                 self._offset_y,

@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 from collections.abc import Callable, Sequence
+from copy import deepcopy
 from itertools import combinations
+from typing import Any
+import uuid
 
 import networkx as nx
 import pygame
 
-from src.components.sensor_math import euclid_distance
-from src.engine.geo_color import Colors
+from src.components.sensors.sensor import Sensor
+from src.components.sensors.sensor_math import euclid_distance
+from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
-
-from .sensors.sensor import Sensor
 
 
 class SensorManager:
@@ -31,11 +35,11 @@ class SensorManager:
         return edges
 
     def get_connected_sensors(self, sensor: Sensor) -> list[Sensor]:
-        if sensor.id() not in self._nx_graph:
+        if sensor.id not in self._nx_graph:
             return []
 
         connected_sensors = []
-        for neighbor_id in self._nx_graph.neighbors(sensor.id()):
+        for neighbor_id in self._nx_graph.neighbors(sensor.id):
             neighbor_sensor = self._nx_graph.nodes[neighbor_id]["sensor"]
             connected_sensors.append(neighbor_sensor)
 
@@ -45,8 +49,9 @@ class SensorManager:
     # Manipulationg Sensors
     # =======================
     def append_sensor(self, sensor: Sensor) -> None:
-        if sensor.id() not in self._nx_graph:
-            self._nx_graph.add_node(sensor.id(), sensor=sensor)
+        if sensor.id not in self._nx_graph:
+            sensor._sensor_manager = self
+            self._nx_graph.add_node(sensor.id, sensor=sensor)
 
     def append_multiple_sensors(self, sensors: Sequence[Sensor]) -> None:
         for sensor in sensors:
@@ -58,20 +63,22 @@ class SensorManager:
         sensor2: Sensor,
         distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
     ) -> None:
-        if sensor1.id() not in self._nx_graph:
+        if sensor1.id not in self._nx_graph:
             self.append_sensor(sensor1)
 
-        if sensor2.id() not in self._nx_graph:
+        if sensor2.id not in self._nx_graph:
             self.append_sensor(sensor2)
 
-        if not self._nx_graph.has_edge(sensor1.id(), sensor2.id()):
+        if not self._nx_graph.has_edge(sensor1.id, sensor2.id):
             dist = distance_metric(sensor1, sensor2)
             self._nx_graph.add_edge(
-                sensor1.id(),
-                sensor2.id(),
+                sensor1.id,
+                sensor2.id,
                 weight=dist,
                 is_transmitting=False,
             )
+            sensor1._neighbour.add(sensor2)
+            sensor2._neighbour.add(sensor1)
 
     def connect_sensors_mesh(
         self,
@@ -120,13 +127,15 @@ class SensorManager:
                 self.connect_sensors(sensor1, sensor2, distance_metric)
 
     def disconnect_sensors(self, sensor1: Sensor, sensor2: Sensor) -> None:
-        if sensor1.id() not in self._nx_graph:
+        if sensor1.id not in self._nx_graph:
             self.append_sensor(sensor1)
 
-        if sensor2.id() not in self._nx_graph:
+        if sensor2.id not in self._nx_graph:
             self.append_sensor(sensor2)
 
-        self._nx_graph.remove_edge(sensor1.id(), sensor2.id())
+        self._nx_graph.remove_edge(sensor1.id, sensor2.id)
+        sensor1._neighbour.remove(sensor2)
+        sensor2._neighbour.remove(sensor1)
 
     def disconnect_multiple_sensors(self, sensors: Sequence[Sensor]) -> None:
         for sensor1, sensor2 in combinations(sensors, 2):
@@ -135,7 +144,7 @@ class SensorManager:
     # =======================
     # DO NOT USE
     # =======================
-    def _mark_transmission(self, sender_id, receiver_id) -> None:
+    def _mark_transmission(self, sender_id: uuid.UUID, receiver_id: uuid.UUID) -> None:
         """Mark that data transmission is occurring on this edge"""
         if self._nx_graph.has_edge(sender_id, receiver_id):
             self._nx_graph.edges[sender_id, receiver_id]["is_transmitting"] = True
@@ -152,18 +161,18 @@ class SensorManager:
             sensor2 = self._nx_graph.nodes[sensor2_id]["sensor"]
             edge_data = self._nx_graph.edges[sensor1_id, sensor2_id]
 
-            pos1 = sensor1.position()
-            pos2 = sensor2.position()
+            pos1 = sensor1.position
+            pos2 = sensor2.position
 
             pixel_pos1 = self._grid.grid_to_pixel(pos1.x, pos1.y)
             pixel_pos2 = self._grid.grid_to_pixel(pos2.x, pos2.y)
 
             is_transmitting = edge_data.get("is_transmitting", False)
             if is_transmitting:
-                color = Colors.WHITE
+                color = Color.WHITE
                 line_width = 4
             else:
-                color = Colors.CONNECTION_GRAY
+                color = Color.CONNECTION_GRAY
                 line_width = 2
 
             pygame.draw.line(
@@ -177,15 +186,18 @@ class SensorManager:
         for sensor in self.list_sensors():
             sensor._flush_run()
 
-    def _update(self):
+    def _update(
+        self,
+        update_fn: Callable[[Any], Any],
+        global_state: Any,
+    ):
         self._flush()
-
         self._reset_transmissions()
 
         for sensor in self.list_sensors():
-            data = sensor.receive()
-            connected_sensors = self.get_connected_sensors(sensor)
-            for connected_sensor in connected_sensors:
-                if len(data) > 0:
-                    self._mark_transmission(sensor.id(), connected_sensor.id())
-                    connected_sensor.transmit(data)
+            cell_color = self._grid.get_color(sensor.position)
+            sensor.measurement_update(cell_color)
+            sensor._receive()
+
+        new_global_state = update_fn(global_state)
+        return deepcopy(new_global_state)
