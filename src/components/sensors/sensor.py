@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from copy import deepcopy
+from dataclasses import dataclass
 import random
 from typing import Any, Generic, TypeVar
 import uuid
@@ -13,6 +14,13 @@ from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
 
 
+@dataclass(frozen=True)
+class Message:
+    value: Any
+    source: uuid.UUID
+    target: uuid.UUID
+
+
 T = TypeVar("T")
 
 
@@ -22,9 +30,9 @@ class Sensor(Generic[T]):
         cords: Coordinates,
         patches: PatchesGrid,
         initial_state: T = None,
-        on_receive: Callable[[Sensor[T], list[float]], list[float]] = lambda _,
+        on_receive: Callable[[Sensor[T], list[Message]], list[Message]] = lambda _,
         value: value,
-        on_transmit: Callable[[Sensor[T], list[float]], None] | None = None,
+        on_transmit: Callable[[Sensor[T], list[Message]], None] | None = None,
         on_measurement_change: Callable[[Sensor[T], Color], None] | None = None,
     ) -> None:
         super().__init__()
@@ -36,8 +44,8 @@ class Sensor(Generic[T]):
         self._on_transmit = on_transmit
         self._on_measurement_change = on_measurement_change
 
-        self._message_queue: list[float] = []
-        self._pending_message_queue: list[float] = []
+        self._message_queue: list[Message] = []
+        self._pending_message_queue: list[Message] = []
 
         self._state: T = deepcopy(initial_state)
 
@@ -87,7 +95,7 @@ class Sensor(Generic[T]):
     # =======================
     # Message passing
     # =======================
-    def receive(self) -> list[float]:
+    def receive(self) -> list[Message]:
         msgs = deepcopy(self._message_queue)
         if len(msgs) == 0:
             return []
@@ -97,9 +105,19 @@ class Sensor(Generic[T]):
             return self._on_receive(self, msgs)
         return []
 
-    def transmit(self, value: list[float]) -> None:
+    def transmit(self, from_sensor_id: uuid.UUID, values: list[float]) -> None:
+        new_msgs: list[Message] = []
+        for value in values:
+            target_id = self.id
+            source_id = from_sensor_id
+            new_msg = Message(value=deepcopy(value), source=source_id, target=target_id)
+            new_msgs.append(new_msg)
+
         if self._on_transmit is not None:
-            self._on_transmit(self, deepcopy(value))
+            if self._marking_fn is not None:
+                for msg in new_msgs:
+                    self._marking_fn(msg.source, msg.target)
+            self._on_transmit(self, deepcopy(new_msgs))
 
     def measurement_update(self, color: Color) -> None:
         if self._current_patch_color == color:
@@ -110,7 +128,7 @@ class Sensor(Generic[T]):
 
         self._current_patch_color = deepcopy(color)
 
-    def write_to_transmit_buffer(self, value: list[float]) -> None:
+    def write_to_transmit_buffer(self, value: list[Message]) -> None:
         self._pending_message_queue += value
 
     # =======================
@@ -146,9 +164,9 @@ def create_default_sensors(
     amount: int,
     grid: PatchesGrid,
     initial_state: Any = None,
-    on_receive: Callable[[Sensor[T], list[float]], list[float]] = lambda _,
+    on_receive: Callable[[Sensor[T], list[Message]], list[Message]] = lambda _,
     value: value,
-    on_transmit: Callable[[Sensor[T], list[float]], None] | None = None,
+    on_transmit: Callable[[Sensor[T], list[Message]], None] | None = None,
     on_measurement_change: Callable[[Sensor[T], Color], None] | None = None,
 ) -> list[Sensor[T]]:
     width = grid._grid_size - 1

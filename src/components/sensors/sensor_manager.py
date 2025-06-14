@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 from collections.abc import Callable, Sequence
+from copy import deepcopy
 from itertools import combinations
+from typing import Any
 import uuid
 
 import networkx as nx
@@ -182,18 +186,25 @@ class SensorManager:
         for sensor in self.list_sensors():
             sensor._flush_run()
 
-    def _update(self):
+    def _update(
+        self,
+        update_fn: Callable[[Any], Any],
+        global_state: Any,
+    ):
+        self._flush()
         self._reset_transmissions()
 
         for sensor in self.list_sensors():
             cell_color = self._grid.get_color(sensor.position)
             sensor.measurement_update(cell_color)
 
-            data = sensor.receive()
+            msgs = sensor.receive()
+            data = [msg.value for msg in msgs]
             connected_sensors = self.get_connected_sensors(sensor)
             for connected_sensor in connected_sensors:
                 if len(data) > 0:
-                    self._mark_transmission(sensor.id, connected_sensor.id)
-                    connected_sensor.transmit(data)
+                    # self._mark_transmission(sensor.id, connected_sensor.id)
+                    connected_sensor.transmit(from_sensor_id=sensor.id, values=data)
 
-        self._flush()
+        new_global_state = update_fn(global_state)
+        return deepcopy(new_global_state)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
+from typing import Any
 
 import pygame
 
@@ -59,11 +60,17 @@ class GeoNetEngine:
                         print(f"Clicked grid position: {grid_pos}")
 
     def _update(
-        self, update_fn: Callable[[SensorManager, PatchesGrid], None] | None
-    ) -> None:
-        if update_fn is not None:
-            update_fn(self._sensor_manager, self._grid)
-        self._sensor_manager._update()
+        self,
+        update_fn: Callable[[SensorManager, PatchesGrid, Any], Any] | None,
+        global_state: Any,
+    ) -> Any:
+        def inner_update(global_state: Any) -> Any:
+            if update_fn is not None:
+                return update_fn(self._sensor_manager, self._grid, global_state)
+            return global_state
+
+        new_global_state = self._sensor_manager._update(inner_update, global_state)
+        return new_global_state
 
     def _draw(self) -> None:
         self._screen.fill(Color.BLACK.to_tuple())
@@ -73,23 +80,26 @@ class GeoNetEngine:
 
     def main_loop(
         self,
-        setup_fn: Callable[[SensorManager, PatchesGrid], None] | None = None,
-        update_fn: Callable[[SensorManager, PatchesGrid], None] | None = None,
+        setup_fn: Callable[[SensorManager, PatchesGrid, Any], None] | None = None,
+        update_fn: Callable[[SensorManager, PatchesGrid, Any], None] | None = None,
     ) -> None:
+        global_state: Any = None
         if setup_fn is not None:
-            setup_fn(self._sensor_manager, self._grid)
+            new_state = setup_fn(self._sensor_manager, self._grid, global_state)
+            global_state = deepcopy(new_state)
         last_draw_time = pygame.time.get_ticks()
         first_draw = True
         while not self._quit:
             self._handle_events()
 
-            # Only execute every second (1000 milliseconds)
+            # Only execute every second (500 milliseconds)
             current_time = pygame.time.get_ticks()
-            if current_time - last_draw_time >= 1000 or first_draw:
-                self._update(update_fn)
+            if current_time - last_draw_time >= 500 or first_draw:
+                new_global_state = self._update(update_fn, global_state)
                 self._draw()
                 last_draw_time = current_time
                 first_draw = False
+                global_state = deepcopy(new_global_state)
             self._clock.tick(self._cfg.fps)
 
         pygame.quit()
