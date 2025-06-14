@@ -3,7 +3,7 @@ from typing import Any
 from src.components.sensors.sensor import Sensor, create_sensors
 from src.components.sensors.sensor_manager import SensorManager
 from src.engine.geo_color import Color
-from src.engine.geonet import GeoNetEngine
+from src.engine.geonet import GeoNetConfig, GeoNetEngine
 from src.engine.grid import PatchesGrid
 
 
@@ -33,7 +33,7 @@ def scenario(manager: SensorManager, patches: PatchesGrid, global_state: Any) ->
 
 
 def main():
-    engine = GeoNetEngine()
+    engine = GeoNetEngine(GeoNetConfig(window_title="Hello Network"))
     engine.main_loop(setup_fn=scenario)
 
 

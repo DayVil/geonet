@@ -1,9 +1,9 @@
 .PHONY: test-examples run-all-examples
 
 EXAMPLES = examples/hello_network.py \
+           examples/using_gg.py \
            examples/using_udg.py \
-           examples/boundary_estimation.py \
-           examples/using_gg.py
+           examples/boundary_estimation/__main__.py 
 
 run-all-examples:
 	@echo "Running all GeoNet examples..."

@@ -16,6 +16,7 @@ from src.engine.grid import PatchesGrid
 class GeoNetConfig:
     screen_width: int = 1000
     screen_heigth: int = 800
+    window_title: str = "GeoNet"
 
     grid_size: int = 55
     grid_margin: int = 10
@@ -36,6 +37,7 @@ class GeoNetEngine:
         self._screen = pygame.display.set_mode(
             (self._cfg.screen_width, self._cfg.screen_heigth), pygame.DOUBLEBUF
         )
+        pygame.display.set_caption(self._cfg.window_title)
 
         self._grid = PatchesGrid(
             screen_width=self._cfg.screen_width,
@@ -94,8 +96,8 @@ class GeoNetEngine:
 
     def main_loop(
         self,
-        setup_fn: Callable[[SensorManager, PatchesGrid, Any], None] | None = None,
-        update_fn: Callable[[SensorManager, PatchesGrid, Any], None] | None = None,
+        setup_fn: Callable[[SensorManager, PatchesGrid, Any], Any] | None = None,
+        update_fn: Callable[[SensorManager, PatchesGrid, Any], Any] | None = None,
     ) -> None:
         global_state: Any = None
         if setup_fn is not None:

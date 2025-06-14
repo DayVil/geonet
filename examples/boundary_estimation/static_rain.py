@@ -8,7 +8,7 @@ from src.components.sensors.sensor_connection_utils import (
 )
 from src.components.sensors.sensor_manager import SensorManager
 from src.engine.geo_color import Color
-from src.engine.geonet import GeoNetEngine
+from src.engine.geonet import GeoNetConfig, GeoNetEngine
 from src.engine.grid import PatchesGrid
 
 
@@ -76,5 +76,5 @@ def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -
 
 
 def static_rain_run():
-    engine = GeoNetEngine()
+    engine = GeoNetEngine(GeoNetConfig(window_title="Static Rain"))
     engine.main_loop(setup, update_fn=on_update)
