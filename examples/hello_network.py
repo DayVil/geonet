@@ -1,25 +1,21 @@
 from typing import Any
 
-from src.components.sensors.sensor import Message, Sensor, create_sensors
+from src.components.sensors.sensor import Sensor, create_sensors
 from src.components.sensors.sensor_manager import SensorManager
 from src.engine.geo_color import Color
 from src.engine.geonet import GeoNetEngine
 from src.engine.grid import PatchesGrid
 
 
-def on_receive(sensor: Sensor, msgs: list[Message]) -> list[Message]:
-    if len(msgs) == 0:
-        sensor.color = Color.CYAN
-        return []
-    else:
-        sensor.color = Color.GREEN
-        return msgs
+def on_receive(sensor: Sensor, values: list[float]) -> None:
+    if sensor.state["state"] != "IDLE":
+        return
 
+    sensor.color = Color.GREEN
+    sensor.state["state"] = "SEND"
 
-def on_transmit(sensor: Sensor, msgs: list[Message]) -> None:
-    if sensor.state["state"] == "IDLE":
-        sensor.write_to_transmit_buffer(msgs)
-        sensor.state["state"] = "SEND"
+    for neighbour in sensor.neighbours:
+        sensor.transmit(neighbour, values)
 
 
 def scenario(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
@@ -28,13 +24,12 @@ def scenario(manager: SensorManager, patches: PatchesGrid, global_state: Any) ->
         grid=patches,
         initial_state={"state": "IDLE"},
         on_receive=on_receive,
-        on_transmit=on_transmit,
     )
     manager.append_multiple_sensors(sensors)
     manager.connect_sensors_chain(sensors)
     manager.connect_sensors_star(sensors[10], sensors[11:15])
 
-    sensors[0].transmit(sensors[0].id, [0])
+    sensors[0].transmit(to_sensor=sensors[0], values=[0])
 
 
 def main():

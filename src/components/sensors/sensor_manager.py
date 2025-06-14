@@ -50,7 +50,7 @@ class SensorManager:
     # =======================
     def append_sensor(self, sensor: Sensor) -> None:
         if sensor.id not in self._nx_graph:
-            sensor._marking_fn = self._mark_transmission
+            sensor._sensor_manager = self
             self._nx_graph.add_node(sensor.id, sensor=sensor)
 
     def append_multiple_sensors(self, sensors: Sequence[Sensor]) -> None:
@@ -77,8 +77,8 @@ class SensorManager:
                 weight=dist,
                 is_transmitting=False,
             )
-            sensor1._neigbours.add(sensor2)
-            sensor2._neigbours.add(sensor1)
+            sensor1._neighbour.add(sensor2)
+            sensor2._neighbour.add(sensor1)
 
     def connect_sensors_mesh(
         self,
@@ -134,8 +134,8 @@ class SensorManager:
             self.append_sensor(sensor2)
 
         self._nx_graph.remove_edge(sensor1.id, sensor2.id)
-        sensor1._neigbours.remove(sensor2)
-        sensor2._neigbours.remove(sensor1)
+        sensor1._neighbour.remove(sensor2)
+        sensor2._neighbour.remove(sensor1)
 
     def disconnect_multiple_sensors(self, sensors: Sequence[Sensor]) -> None:
         for sensor1, sensor2 in combinations(sensors, 2):
@@ -197,14 +197,7 @@ class SensorManager:
         for sensor in self.list_sensors():
             cell_color = self._grid.get_color(sensor.position)
             sensor.measurement_update(cell_color)
-
-            msgs = sensor.receive()
-            data = [msg.value for msg in msgs]
-            connected_sensors = self.get_connected_sensors(sensor)
-            for connected_sensor in connected_sensors:
-                if len(data) > 0:
-                    # self._mark_transmission(sensor.id, connected_sensor.id)
-                    connected_sensor.transmit(from_sensor_id=sensor.id, values=data)
+            sensor._receive()
 
         new_global_state = update_fn(global_state)
         return deepcopy(new_global_state)

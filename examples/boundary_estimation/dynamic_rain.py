@@ -3,7 +3,7 @@ import random
 from typing import Any
 
 from examples.boundary_estimation.scenarios import load_random_scenario
-from src.components.sensors.sensor import Message, Sensor, create_sensors
+from src.components.sensors.sensor import Sensor, create_sensors
 from src.components.sensors.sensor_connection_utils import (
     gg_connection,
 )
@@ -26,14 +26,13 @@ def color_to_float(color: Color) -> float:
         return 0.0
 
 
-def on_transmit(sensor: Sensor, msgs: list[Message]) -> None:
+def on_receive(sensor: Sensor, msgs: list[float]) -> None:
     send = sensor.state["send"]
-    if len(msgs) > 0 and send:
-        sensor.write_to_transmit_buffer(msgs)
-        sensor.state["send"] = False
+    if len(msgs) == 0 or send:
+        return
 
+    sensor.state["send"] = True
 
-def on_receive(sensor: Sensor, msgs: list[Message]) -> list[Message]:
     state: State = sensor.state["current_state"]
     match state:
         case State.INIT:
@@ -42,7 +41,8 @@ def on_receive(sensor: Sensor, msgs: list[Message]) -> list[Message]:
             pass
         case State.BNDY:
             pass
-    return msgs
+
+    sensor.broadcast(msgs)
 
 
 def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
@@ -57,7 +57,7 @@ def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -
         state = sensor.state["current_state"]
         if random.random() > 0.9 and state == State.INIT:
             patch_color = color_to_float(patches.get_color(sensor.position))
-            sensor.transmit(sensor.id, [patch_color])
+            sensor.transmit(to_sensor=sensor, values=[patch_color])
     return global_state
 
 
@@ -69,9 +69,8 @@ def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> An
     sensors = create_sensors(
         amount=90,
         grid=patches,
-        initial_state={"current_state": State.INIT, "send": True},
+        initial_state={"current_state": State.INIT, "send": False},
         on_receive=on_receive,
-        on_transmit=on_transmit,
         on_measurement_change=on_change,
     )
     for sensor in sensors:
