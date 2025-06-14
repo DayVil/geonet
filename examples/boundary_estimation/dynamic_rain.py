@@ -1,5 +1,6 @@
 from typing import Any
 
+from examples.boundary_estimation.scenarios import load_random_scenario
 from examples.boundary_estimation.state import State
 from src.components.sensors.sensor import Message, Sensor, create_sensors
 from src.components.sensors.sensor_connection_utils import (
@@ -20,6 +21,11 @@ def on_receive(sensor: Sensor, msgs: list[Message]) -> list[Message]:
 
 
 def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
+    if global_state["count"] % 7 == 0:
+        patches.clear_color()
+        load_random_scenario(patches)
+
+    global_state["count"] += 1
     return global_state
 
 
@@ -36,6 +42,7 @@ def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> An
     manager.append_multiple_sensors(sensors)
     manager.connect_sensors_if(sensors, gg_connection(sensors))
 
+    global_state = {"count": 0}
     return global_state
 
 

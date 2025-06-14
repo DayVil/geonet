@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pygame
 
-from src.components.sensors.sensor import Coordinates
+from src.components.coordinates import Coordinates
 
 from .geo_color import Color
 
@@ -61,6 +61,9 @@ class PatchesGrid:
             height=self._grid_size,
             color=color,
         )
+
+    def clear_color(self) -> None:
+        self.fill_grid(Color.BLACK)
 
     # =======================
     # Positioning of Components
