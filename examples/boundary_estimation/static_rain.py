@@ -1,7 +1,7 @@
+from enum import Enum, auto
 from typing import Any
 
 from examples.boundary_estimation.scenarios import load_random_scenario
-from examples.boundary_estimation.state import State
 from src.components.sensors.sensor import Message, Sensor, create_sensors
 from src.components.sensors.sensor_connection_utils import (
     gg_connection,
@@ -10,6 +10,14 @@ from src.components.sensors.sensor_manager import SensorManager
 from src.engine.geo_color import Color
 from src.engine.geonet import GeoNetEngine
 from src.engine.grid import PatchesGrid
+
+
+class State(Enum):
+    IDLE = auto()
+    BNDY = auto()
+    OBNDY = auto()
+    INSIDE = auto()
+    OUTSIDE = auto()
 
 
 def on_receive(sensor: Sensor, msgs: list[Message]) -> list[Message]:
