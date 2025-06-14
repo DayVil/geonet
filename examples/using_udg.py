@@ -1,6 +1,6 @@
 from src.components.sensor_connection_utils import udg_connection_autotune
 from src.components.sensor_manager import SensorManager
-from src.components.sensors.default_sensor import DefaultSensor, create_default_sensors
+from src.components.sensors.default_sensor import DefaultSensor, create_sensors
 from src.engine.geo_color import Colors
 from src.engine.geonet import GeoNetEngine
 from src.engine.grid import PatchesGrid
@@ -22,7 +22,7 @@ def on_transmit(sensor: DefaultSensor, value: list[float]) -> None:
 
 
 def scenario(manager: SensorManager, patches: PatchesGrid) -> None:
-    sensors = create_default_sensors(
+    sensors = create_sensors(
         amount=100,
         grid=patches,
         initial_state={"state": "IDLE"},

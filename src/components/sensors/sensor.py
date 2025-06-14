@@ -160,7 +160,7 @@ class Sensor(Generic[T]):
         return hash(self.id)
 
 
-def create_default_sensors(
+def create_sensors(
     amount: int,
     grid: PatchesGrid,
     initial_state: Any = None,

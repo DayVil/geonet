@@ -1,6 +1,6 @@
 from typing import Any
 
-from src.components.sensors.sensor import Message, Sensor, create_default_sensors
+from src.components.sensors.sensor import Message, Sensor, create_sensors
 from src.components.sensors.sensor_manager import SensorManager
 from src.engine.geo_color import Color
 from src.engine.geonet import GeoNetEngine
@@ -23,7 +23,7 @@ def on_transmit(sensor: Sensor, msgs: list[Message]) -> None:
 
 
 def scenario(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
-    sensors = create_default_sensors(
+    sensors = create_sensors(
         amount=20,
         grid=patches,
         initial_state={"state": "IDLE"},

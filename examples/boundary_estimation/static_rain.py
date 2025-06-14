@@ -1,8 +1,8 @@
-from enum import Enum, auto
 from typing import Any
 
-from src.components.coordinates import Coordinates
-from src.components.sensors.sensor import Message, Sensor, create_default_sensors
+from examples.boundary_estimation.scenarios import load_random_scenario
+from examples.boundary_estimation.state import State
+from src.components.sensors.sensor import Message, Sensor, create_sensors
 from src.components.sensors.sensor_connection_utils import (
     gg_connection,
 )
@@ -10,14 +10,6 @@ from src.components.sensors.sensor_manager import SensorManager
 from src.engine.geo_color import Color
 from src.engine.geonet import GeoNetEngine
 from src.engine.grid import PatchesGrid
-
-
-class State(Enum):
-    IDLE = auto()
-    BNDY = auto()
-    OBNDY = auto()
-    INSIDE = auto()
-    OUTSIDE = auto()
 
 
 def on_receive(sensor: Sensor, msgs: list[Message]) -> list[Message]:
@@ -49,25 +41,8 @@ def on_transmit(sensor: Sensor, msgs: list[Message]) -> None:
 
 
 def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
-    patches.set_color_rect(
-        starting_point=Coordinates(12, 25),
-        width=35,
-        height=15,
-        color=Color.NAVY,
-    )
-    patches.set_color_rect(
-        starting_point=Coordinates(15, 22),
-        width=25,
-        height=20,
-        color=Color.NAVY,
-    )
-    patches.set_color_rect(
-        starting_point=Coordinates(20, 10),
-        width=25,
-        height=20,
-        color=Color.NAVY,
-    )
-    sensors = create_default_sensors(
+    load_random_scenario(patches)
+    sensors = create_sensors(
         amount=150,
         grid=patches,
         initial_state=(State.IDLE, False, patches),
