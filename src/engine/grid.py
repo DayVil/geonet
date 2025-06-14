@@ -23,7 +23,7 @@ class PatchesGrid:
         self._grid_height: int = self._grid_width
         self._cell_size: float = self._grid_width / grid_size
 
-        self._offset_x: int = (screen_width - self._grid_width) // 2
+        self._offset_x: int = (screen_width - self._grid_width) // 2 + 80
         self._offset_y: int = (screen_height - self._grid_height) // 2
         self._cell_colors: dict[Coordinates, Color] = {}
         self.fill_grid(Color.BLACK)

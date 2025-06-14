@@ -45,6 +45,10 @@ class GeoNetEngine:
         )
         self._sensor_manager = SensorManager(self._grid)
 
+        self._tick_counter = 0
+        pygame.font.init()
+        self._font = pygame.font.Font(None, 24)
+
     def _handle_events(self) -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -73,7 +77,17 @@ class GeoNetEngine:
         return new_global_state
 
     def _draw(self) -> None:
+        self._tick_counter += 1
+
         self._screen.fill(Color.BLACK.to_tuple())
+
+        tick_text = self._font.render(
+            f"Ticks: {self._tick_counter}", True, Color.WHITE.to_tuple()
+        )
+        tick_x = 10
+        tick_y = 10
+        self._screen.blit(tick_text, (tick_x, tick_y))
+
         self._grid._draw(self._screen)
         self._sensor_manager._draw(self._screen)
         pygame.display.flip()
@@ -94,12 +108,13 @@ class GeoNetEngine:
 
             # Only execute every second (500 milliseconds)
             current_time = pygame.time.get_ticks()
-            if current_time - last_draw_time >= 500 or first_draw:
+            if current_time - last_draw_time >= 700 or first_draw:
                 new_global_state = self._update(update_fn, global_state)
                 self._draw()
-                last_draw_time = current_time
                 first_draw = False
                 global_state = deepcopy(new_global_state)
+                last_draw_time = pygame.time.get_ticks()
+
             self._clock.tick(self._cfg.fps)
 
         pygame.quit()
