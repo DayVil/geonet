@@ -145,7 +145,7 @@ class Sensor(Generic[T]):
         return self.__str__()
 
     def __str__(self) -> str:
-        return f"DefualtSensor: \n\tid = {self._id}\n\tcords = {self._cords}"
+        return f"Sensor: \n\tid = {self._id}\n\tcords = {self._cords}\n\tcolor = {self.color}"
 
     def __eq__(self, other: Sensor[T]) -> bool:
         if not isinstance(other, Sensor):

@@ -63,7 +63,15 @@ class GeoNetEngine:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     is_valid, grid_pos = self._grid.pixel_to_grid(mouse_x, mouse_y)
                     if is_valid:
+                        print("=" * 10)
                         print(f"Clicked grid position: {grid_pos}")
+                        sensors = self._sensor_manager.list_sensors()
+                        for sensor in sensors:
+                            if sensor.position == grid_pos:
+                                print(sensor)
+                                break
+                        print("=" * 10)
+                        print()
 
     def _update(
         self,
