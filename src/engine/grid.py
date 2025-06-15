@@ -8,6 +8,27 @@ from .geo_color import Color
 
 
 class PatchesGrid:
+    """
+    A grid system for managing colored patches in a sensor network simulation.
+
+    This class provides a grid-based coordinate system where each cell can have
+    a specific color. It handles coordinate transformations between grid positions
+    and pixel positions, and provides methods for setting colors of individual
+    cells or rectangular regions.
+
+    Attributes:
+        _grid_size (int): Number of cells per side in the square grid
+        _grid_width (int): Width of the grid in pixels
+        _grid_height (int): Height of the grid in pixels
+        _cell_size (float): Size of each cell in pixels
+        _offset_x (int): Horizontal offset for centering the grid
+        _offset_y (int): Vertical offset for centering the grid
+        _cell_colors (dict[Coordinates, Color]): Mapping of grid positions to colors
+    """
+
+    # =======================
+    # Initialization
+    # =======================
     def __init__(
         self,
         screen_width: int,
@@ -15,6 +36,15 @@ class PatchesGrid:
         grid_margin: int,
         grid_size: int,
     ) -> None:
+        """
+        Initialize the patches grid with specified dimensions and settings.
+
+        Args:
+            screen_width (int): Width of the screen in pixels
+            screen_height (int): Height of the screen in pixels
+            grid_margin (int): Margin around the grid in pixels
+            grid_size (int): Number of cells per side in the square grid
+        """
         self._grid_size = grid_size
 
         self._grid_width: int = min(
@@ -29,22 +59,56 @@ class PatchesGrid:
         self.fill_grid(Color.BLACK)
 
     # =======================
-    # Fetch cell information
+    # Cell information retrieval
     # =======================
     def get_color(self, cord: Coordinates) -> Color:
+        """
+        Get the color of a specific grid cell.
+
+        Args:
+            cord (Coordinates): The grid coordinates to query
+
+        Returns:
+            Color: The color of the specified cell
+
+        Raises:
+            ValueError: If coordinates are invalid or out of bounds
+        """
         self._verify_cords(cord)
         return self._cell_colors[cord]
 
     # =======================
-    # Settings of Cells
+    # Cell modification and settings
     # =======================
     def set_color(self, cords: Coordinates, color: Color) -> None:
+        """
+        Set the color of a specific grid cell.
+
+        Args:
+            cords (Coordinates): The grid coordinates to modify
+            color (Color): The color to set for the cell
+
+        Raises:
+            ValueError: If coordinates are invalid or out of bounds
+        """
         self._verify_cords(cords)
         self._cell_colors[cords] = color
 
     def set_color_rect(
         self, starting_point: Coordinates, width: int, height: int, color: Color
     ) -> None:
+        """
+        Set the color of a rectangular region of grid cells.
+
+        Args:
+            starting_point (Coordinates): Top-left corner of the rectangle
+            width (int): Width of the rectangle in cells
+            height (int): Height of the rectangle in cells
+            color (Color): The color to set for all cells in the rectangle
+
+        Raises:
+            ValueError: If any coordinates in the rectangle are invalid or out of bounds
+        """
         for w in range(width):
             for h in range(height):
                 current_cord = Coordinates(
@@ -55,6 +119,12 @@ class PatchesGrid:
                 self.set_color(current_cord, color)
 
     def fill_grid(self, color: Color) -> None:
+        """
+        Fill the entire grid with a single color.
+
+        Args:
+            color (Color): The color to fill the entire grid with
+        """
         self.set_color_rect(
             starting_point=Coordinates(0, 0),
             width=self._grid_size,
@@ -63,20 +133,46 @@ class PatchesGrid:
         )
 
     def clear_color(self) -> None:
+        """
+        Clear the grid by filling it with black color.
+        """
         self.fill_grid(Color.BLACK)
 
     # =======================
-    # Positioning of Components
+    # Coordinate conversion and positioning
     # =======================
     def grid_to_pixel(self, grid_x: int, grid_y: int) -> tuple[float, float]:
-        """Convert grid coordinates to pixel coordinates (center of cell)"""
+        """
+        Convert grid coordinates to pixel coordinates (center of cell).
+
+        Args:
+            grid_x (int): X coordinate in the grid
+            grid_y (int): Y coordinate in the grid
+
+        Returns:
+            tuple[float, float]: Pixel coordinates (x, y) at the center of the cell
+
+        Raises:
+            ValueError: If grid coordinates are invalid or out of bounds
+        """
         self._verify_cords(Coordinates(grid_x, grid_y))
         pixel_x = int(self._offset_x + (grid_x + 0.5) * self._cell_size)
         pixel_y = int(self._offset_y + (grid_y + 0.5) * self._cell_size)
         return pixel_x, pixel_y
 
     def pixel_to_grid(self, x: float, y: float) -> tuple[bool, Coordinates]:
-        """Convert pixel coordinates to grid coordinates."""
+        """
+        Convert pixel coordinates to grid coordinates.
+
+        Args:
+            x (float): X coordinate in pixels
+            y (float): Y coordinate in pixels
+
+        Returns:
+            tuple[bool, Coordinates]: A tuple containing:
+                - bool: True if the pixel is within the grid bounds, False otherwise
+                - Coordinates: The corresponding grid coordinates (0,0 if out of bounds)
+        """
         if (
             x < self._offset_x
             or x >= self._offset_x + self._grid_width
@@ -94,9 +190,21 @@ class PatchesGrid:
             return False, Coordinates(0, 0)
 
     # =======================
-    # DO NOT USE
+    # Internal methods - DO NOT USE directly
     # =======================
     def _verify_cords(self, cord: Coordinates) -> None:
+        """
+        Validate that coordinates are within the grid bounds.
+
+        This is an internal method used to ensure coordinates are valid before
+        performing operations on grid cells.
+
+        Args:
+            cord (Coordinates): The coordinates to validate
+
+        Raises:
+            ValueError: If coordinates are not a Coordinates instance or are out of bounds
+        """
         if not isinstance(cord, Coordinates):
             raise ValueError(
                 f"cord may only be of type Coordinates but received: {type(cord)}"
@@ -111,7 +219,15 @@ class PatchesGrid:
             )
 
     def _draw(self, screen: pygame.Surface) -> None:
-        """Draw the grid lines"""
+        """
+        Draw the grid and all its colored cells to the screen.
+
+        This internal method renders the entire grid including cell colors,
+        grid lines, and a border around the grid.
+
+        Args:
+            screen (pygame.Surface): The pygame surface to draw on
+        """
         # Fill cells with their colors
         for cords, color in self._cell_colors.items():
             rect = pygame.Rect(

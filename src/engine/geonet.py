@@ -14,6 +14,22 @@ from src.engine.grid import PatchesGrid
 
 @dataclass(frozen=True)
 class GeoNetConfig:
+    """
+    Configuration settings for the GeoNet simulation engine.
+
+    This dataclass contains all the configurable parameters for the GeoNet
+    simulation including display settings, grid parameters, and timing settings.
+
+    Attributes:
+        screen_width (int): Width of the application window in pixels. Defaults to 1000.
+        screen_heigth (int): Height of the application window in pixels. Defaults to 800.
+        window_title (str): Title displayed in the window title bar. Defaults to "GeoNet".
+        grid_size (int): Number of cells in the grid (square grid). Defaults to 55.
+        grid_margin (int): Margin around the grid in pixels. Defaults to 10.
+        fps (int): Target frames per second for the display. Defaults to 60.
+        update_interval (int): Milliseconds between simulation updates. Defaults to 700.
+    """
+
     screen_width: int = 1000
     screen_heigth: int = 800
     window_title: str = "GeoNet"
@@ -22,10 +38,35 @@ class GeoNetConfig:
     grid_margin: int = 10
 
     fps: int = 60
+    update_interval: int = 700
 
 
 class GeoNetEngine:
+    """
+    The main engine class for the GeoNet sensor network simulation.
+
+    This class manages the pygame display, handles events, updates the simulation,
+    and coordinates between the grid system and sensor manager. It provides the
+    main simulation loop and user interaction handling.
+
+    Attributes:
+        _cfg (GeoNetConfig): Configuration settings for the engine
+        _quit (bool): Flag indicating if the simulation should terminate
+        _clock (pygame.time.Clock): Pygame clock for controlling frame rate
+        _screen (pygame.Surface): Main display surface
+        _grid (PatchesGrid): The grid system for the simulation
+        _sensor_manager (SensorManager): Manager for all sensors in the simulation
+        _tick_counter (int): Counter for simulation ticks
+        _font (pygame.font.Font): Font for rendering text
+    """
+
     def __init__(self, config: GeoNetConfig | None = None) -> None:
+        """
+        Initialize the GeoNet engine with the given configuration.
+
+        Args:
+            config (GeoNetConfig | None): Configuration object. If None, default config is used.
+        """
         if config is None:
             cfg = GeoNetConfig()
         else:
@@ -52,6 +93,13 @@ class GeoNetEngine:
         self._font = pygame.font.Font(None, 24)
 
     def _handle_events(self) -> None:
+        """
+        Process pygame events including window close, keyboard input, and mouse clicks.
+
+        Handles:
+        - Window close button and ESC key for quitting
+        - Mouse clicks for sensor inspection (prints sensor info to console)
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self._quit = True
@@ -78,6 +126,18 @@ class GeoNetEngine:
         update_fn: Callable[[SensorManager, PatchesGrid, Any], Any] | None,
         global_state: Any,
     ) -> Any:
+        """
+        Update the simulation state by calling the user-provided update function.
+
+        Args:
+            update_fn (Callable | None): User-defined update function that receives
+                the sensor manager, grid, and global state
+            global_state (Any): Current global state of the simulation
+
+        Returns:
+            Any: Updated global state returned from the update function
+        """
+
         def inner_update(global_state: Any) -> Any:
             if update_fn is not None:
                 return update_fn(self._sensor_manager, self._grid, global_state)
@@ -87,6 +147,11 @@ class GeoNetEngine:
         return new_global_state
 
     def _draw(self) -> None:
+        """
+        Render the current simulation state to the screen.
+
+        Draws the grid, sensors, connections, and displays the tick counter.
+        """
         self._tick_counter += 1
 
         self._screen.fill(Color.BLACK.to_tuple())
@@ -107,6 +172,21 @@ class GeoNetEngine:
         setup_fn: Callable[[SensorManager, PatchesGrid, Any], Any] | None = None,
         update_fn: Callable[[SensorManager, PatchesGrid, Any], Any] | None = None,
     ) -> None:
+        """
+        Run the main simulation loop.
+
+        This method initializes the simulation with the setup function and then
+        continuously runs the simulation loop, processing events, updating state,
+        and rendering the display at the configured intervals.
+
+        Args:
+            setup_fn (Callable | None): Optional function called once at startup
+                to initialize the simulation. Receives sensor manager, grid, and
+                initial global state (None).
+            update_fn (Callable | None): Optional function called every update
+                interval to update the simulation state. Receives sensor manager,
+                grid, and current global state.
+        """
         global_state: Any = None
         if setup_fn is not None:
             new_state = setup_fn(self._sensor_manager, self._grid, global_state)
@@ -116,9 +196,8 @@ class GeoNetEngine:
         while not self._quit:
             self._handle_events()
 
-            # Only execute every second (500 milliseconds)
             current_time = pygame.time.get_ticks()
-            if current_time - last_draw_time >= 700 or first_draw:
+            if current_time - last_draw_time >= self._cfg.update_interval or first_draw:
                 new_global_state = self._update(update_fn, global_state)
                 self._draw()
                 first_draw = False

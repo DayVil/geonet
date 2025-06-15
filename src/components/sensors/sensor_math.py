@@ -2,6 +2,20 @@ from src.components.sensors.sensor import Sensor
 
 
 def euclid_distance(sensor1: Sensor, sensor2: Sensor) -> float:
+    """
+    Calculate the Euclidean distance between two sensors.
+
+    This function computes the Euclidean distance between the positions of
+    two sensors, which is commonly used for determining connectivity in
+    sensor networks.
+
+    Args:
+        sensor1 (Sensor): The first sensor
+        sensor2 (Sensor): The second sensor
+
+    Returns:
+        float: The Euclidean distance between the two sensor positions
+    """
     pos1 = sensor1.position
     pos2 = sensor2.position
     return pos1.euclid_distance(pos2)
