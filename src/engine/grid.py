@@ -1,3 +1,10 @@
+"""
+Grid system for spatial representation in the GeoNet simulation.
+
+This module provides the PatchesGrid class that handles the spatial grid system,
+coordinate transformations, and visual rendering of the simulation space.
+"""
+
 from __future__ import annotations
 
 import pygame

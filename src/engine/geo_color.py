@@ -1,3 +1,10 @@
+"""
+Color definitions and utilities for the GeoNet simulation.
+
+This module provides the Color class and predefined color constants used throughout
+the GeoNet application for rendering and visual representation.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

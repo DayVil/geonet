@@ -1,3 +1,10 @@
+"""
+Main GeoNet simulation engine and configuration.
+
+This module contains the core GeoNet simulation engine that handles pygame display,
+event processing, and coordinates the simulation loop between sensors and the grid system.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Callable
