@@ -26,7 +26,6 @@ def color_to_float(color: Color) -> float:
 
 
 def on_receive(sensor: Sensor, values: list[float]) -> None:
-    # send = sensor.state["send"]
     if len(values) == 0:
         return
 

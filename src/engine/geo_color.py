@@ -1,3 +1,10 @@
+"""
+Color definitions and utilities for the GeoNet simulation.
+
+This module provides the Color class and predefined color constants used throughout
+the GeoNet application for rendering and visual representation.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,6 +13,22 @@ from typing import ClassVar
 
 @dataclass
 class Color:
+    """
+    A dataclass representing RGB color values with predefined color constants.
+
+    This class provides color representation for the GeoNet application with
+    validation and conversion utilities. It includes common color constants
+    used throughout the application.
+
+    Attributes:
+        r (int): Red component (0-255)
+        g (int): Green component (0-255)
+        b (int): Blue component (0-255)
+
+    Class Variables:
+        Various predefined color constants like BLACK, WHITE, RED, etc.
+    """
+
     r: int
     g: int
     b: int
@@ -29,6 +52,14 @@ class Color:
     FOREST: ClassVar[Color]
 
     def __post_init__(self) -> None:
+        """
+        Validate RGB values after initialization.
+
+        Ensures all RGB values are within the valid range of 0-255.
+
+        Raises:
+            ValueError: If any RGB value is outside the range 0-255
+        """
         if self.r > 255 or self.g > 255 or self.b > 255:
             raise ValueError(
                 f"r, g, b must be below 255: r:{self.r}, g:{self.g}, b:{self.b}"
@@ -39,9 +70,16 @@ class Color:
             )
 
     def to_tuple(self) -> tuple[int, int, int]:
+        """
+        Convert the color to a tuple format suitable for pygame operations.
+
+        Returns:
+            tuple[int, int, int]: A tuple containing (r, g, b) values
+        """
         return (self.r, self.g, self.b)
 
 
+# Color constant definitions
 Color.BLACK = Color(20, 20, 30)
 Color.WHITE = Color(255, 255, 255)
 Color.GRAY = Color(128, 128, 128)
