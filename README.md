@@ -140,9 +140,11 @@ python -m examples.boundary_estimation
 Watch GeoNet in action with these example demonstrations:
 
 ![Hello Network Example](docs/hello_network.gif)
+
 *Basic network connectivity and communication patterns*
 
 ![Boundary Detection Example](docs/boundary_detection.gif)
+
 *Advanced boundary detection algorithms in sensor networks*
 
 ## Architecture
