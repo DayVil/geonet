@@ -14,9 +14,6 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["src*", "examples*"]
 
-[project.scripts]
-examples = "examples.using_udg:main"
-
 [tool.uv]
 package = true
 

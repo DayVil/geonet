@@ -1,4 +1,7 @@
 # GeoNet
+<p align="center">
+  <img src="docs/icon.png" alt="GeoNet Logo" width="180"/>
+</p>
 
 A Python-based sensor network simulation framework with real-time visualization capabilities. GeoNet allows you to create, simulate, and visualize sensor networks with various connection topologies and communication patterns.
 
@@ -14,6 +17,7 @@ A Python-based sensor network simulation framework with real-time visualization 
   - [Examples](#examples)
     - [Basic Examples](#basic-examples)
     - [Advanced Examples](#advanced-examples)
+    - [Demonstrations](#demonstrations)
   - [Architecture](#architecture)
     - [Core Components](#core-components)
       - [Engine (`/src/engine/`)](#engine-srcengine)
@@ -130,6 +134,16 @@ python -m examples.using_udg
 python -m examples.using_gg
 python -m examples.boundary_estimation
 ```
+
+### Demonstrations
+
+Watch GeoNet in action with these example demonstrations:
+
+![Hello Network Example](docs/hello_network.gif)
+*Basic network connectivity and communication patterns*
+
+![Boundary Detection Example](docs/boundary_detection.gif)
+*Advanced boundary detection algorithms in sensor networks*
 
 ## Architecture
 
@@ -271,7 +285,7 @@ geonet/
 
 ## License
 
-The license is can be found in the [LICENSE](LICENSE) file.
+The license can be located in the [LICENSE](LICENSE) file.
 
 ## Research Applications
 
