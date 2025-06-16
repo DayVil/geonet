@@ -7,8 +7,8 @@ import uuid
 
 import pygame
 
-from src.components.coordinate_utils import generate_random_coordinates
-from src.components.coordinates import Coordinates
+from src.components.coords.coordinate_utils import generate_random_coordinates
+from src.components.coords.coordinates import Coordinates
 from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pygame
 
-from src.components.coordinates import Coordinates
+from src.components.coords.coordinates import Coordinates
 
 from .geo_color import Color
 

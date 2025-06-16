@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 
-from src.components.coordinates import Coordinates
+from src.components.coords.coordinates import Coordinates
 from src.engine.grid import PatchesGrid
 
 
