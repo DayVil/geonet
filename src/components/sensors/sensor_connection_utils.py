@@ -1,4 +1,20 @@
+"""
+Connection utility functions for sensor network topology creation.
+
+This module provides various connectivity patterns and algorithms for creating
+sensor network topologies, including Unit Disk Graph (UDG) and Gabriel Graph (GG)
+connectivity patterns. These are commonly used in wireless sensor network research.
+
+Key Features:
+    - Unit Disk Graph connectivity with fixed or auto-tuned radius
+    - Gabriel Graph connectivity for sparse but connected networks
+    - Connection functions that can be used with SensorManager topology methods
+"""
+
+# pyright: reportUnknownVariableType=false, reportPrivateUsage=false, reportUnknownMemberType=false, reportUnknownArgumentType=false
+
 from collections.abc import Callable
+from typing import TypeVar
 
 import networkx as nx
 
@@ -7,7 +23,10 @@ from src.components.sensors.sensor_manager import SensorManager
 from src.components.sensors.sensor_math import euclid_distance
 
 
-def udg_connection(distance: int) -> Callable[[Sensor, Sensor], bool]:
+T = TypeVar("T")
+
+
+def udg_connection(distance: int) -> Callable[[Sensor[T], Sensor[T]], bool]:
     """
     Create a Unit Disk Graph (UDG) connection function.
 
@@ -19,14 +38,14 @@ def udg_connection(distance: int) -> Callable[[Sensor, Sensor], bool]:
         distance (int): Maximum distance for sensor connectivity
 
     Returns:
-        Callable[[Sensor, Sensor], bool]: A function that returns True if two
+        Callable[[Sensor[T], Sensor[T]], bool]: A function that returns True if two
             sensors should be connected based on the distance criterion
     """
     internal_distance = distance
 
     def udg_connection_stub(
-        sensor1: Sensor,
-        sensor2: Sensor,
+        sensor1: Sensor[T],
+        sensor2: Sensor[T],
     ) -> bool:
         if euclid_distance(sensor1, sensor2) <= internal_distance:
             return True
@@ -36,8 +55,8 @@ def udg_connection(distance: int) -> Callable[[Sensor, Sensor], bool]:
 
 
 def udg_connection_autotune(
-    manager: SensorManager, sensors: list[Sensor]
-) -> Callable[[Sensor, Sensor], bool]:
+    manager: SensorManager, sensors: list[Sensor[T]]
+) -> Callable[[Sensor[T], Sensor[T]], bool]:
     """
     Create an auto-tuned UDG connection function based on network connectivity.
 
@@ -47,23 +66,23 @@ def udg_connection_autotune(
 
     Args:
         manager (SensorManager): The sensor manager to use for network analysis
-        sensors (list[Sensor]): List of sensors to analyze
+        sensors (list[Sensor[T]]): List of sensors to analyze
 
     Returns:
-        Callable[[Sensor, Sensor], bool]: A function that returns True if two
+        Callable[[Sensor[T], Sensor[T]], bool]: A function that returns True if two
             sensors should be connected based on the auto-tuned distance criterion
     """
     manager.connect_sensors_mesh(sensors)
     network = manager._nx_graph
     mst = nx.minimum_spanning_tree(network)
     mst_edges = list(mst.edges(data=True))
-    edges_weight = [data["weight"] for _, _, data in list(mst_edges)]
-    len_required = max(edges_weight)
+    edges_weight: list[float] = [data["weight"] for _, _, data in list(mst_edges)]
+    len_required: float = max(edges_weight)
     manager.disconnect_multiple_sensors(sensors)
 
     def udg_connection_stub(
-        sensor1: Sensor,
-        sensor2: Sensor,
+        sensor1: Sensor[T],
+        sensor2: Sensor[T],
     ) -> bool:
         if euclid_distance(sensor1, sensor2) <= len_required:
             return True
@@ -72,7 +91,7 @@ def udg_connection_autotune(
     return udg_connection_stub
 
 
-def gg_connection(sensors: list[Sensor]) -> Callable[[Sensor, Sensor], bool]:
+def gg_connection(sensors: list[Sensor[T]]) -> Callable[[Sensor[T], Sensor[T]], bool]:
     """
     Create a Gabriel Graph (GG) connection function.
 
@@ -81,17 +100,17 @@ def gg_connection(sensors: list[Sensor]) -> Callable[[Sensor, Sensor], bool]:
     This creates a sparse connectivity pattern while maintaining network connectivity.
 
     Args:
-        sensors (list[Sensor]): List of all sensors in the network (needed to
+        sensors (list[Sensor[T]]): List of all sensors in the network (needed to
             check for interference from other sensors)
 
     Returns:
-        Callable[[Sensor, Sensor], bool]: A function that returns True if two
+        Callable[[Sensor[T], Sensor[T]], bool]: A function that returns True if two
             sensors should be connected based on the Gabriel Graph criterion
     """
 
     def gg_connection_stub(
-        sensor1: Sensor,
-        sensor2: Sensor,
+        sensor1: Sensor[T],
+        sensor2: Sensor[T],
     ) -> bool:
         center_point = sensor1.position.mid_pos(sensor2.position)
         radius = sensor1.position.euclid_distance(center_point)

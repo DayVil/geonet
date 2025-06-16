@@ -1,5 +1,3 @@
-from typing import Any
-
 from src.components.sensors.sensor import Sensor
 from src.components.sensors.sensor_manager import SensorManager
 from src.engine.geo_color import Color
@@ -7,7 +5,10 @@ from src.engine.geonet import GeoNetConfig, GeoNetEngine
 from src.engine.grid import PatchesGrid
 
 
-def on_receive(sensor: Sensor, values: list[float]) -> None:
+T = dict[str, str]
+
+
+def on_receive(sensor: Sensor[T], values: list[float]) -> None:
     if sensor.state["state"] != "IDLE":
         return
 
@@ -18,8 +19,8 @@ def on_receive(sensor: Sensor, values: list[float]) -> None:
         sensor.transmit(neighbour, values)
 
 
-def scenario(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
-    sensors = manager.create_sensors(
+def scenario(manager: SensorManager, _patches: PatchesGrid) -> None:
+    sensors = manager.create_and_append_sensors(
         amount=20,
         initial_state={"state": "IDLE"},
         on_receive=on_receive,

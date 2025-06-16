@@ -1,7 +1,19 @@
+"""
+Mathematical operations and utilities for sensor networks.
+
+This module provides mathematical functions commonly used in sensor network
+simulations, including distance calculations and geometric operations.
+"""
+
+from typing import TypeVar
+
 from src.components.sensors.sensor import Sensor
 
 
-def euclid_distance(sensor1: Sensor, sensor2: Sensor) -> float:
+T = TypeVar("T")
+
+
+def euclid_distance(sensor1: Sensor[T], sensor2: Sensor[T]) -> float:
     """
     Calculate the Euclidean distance between two sensors.
 

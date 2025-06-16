@@ -1,3 +1,12 @@
+"""
+Utility functions for coordinate generation and manipulation.
+
+This module provides functions for generating random coordinates within grid bounds,
+useful for placing sensors and other objects in the simulation space.
+"""
+
+# pyright: reportPrivateUsage=false
+
 from __future__ import annotations
 
 import random
@@ -22,7 +31,8 @@ def generate_random_coordinates(
     Raises:
         AssertionError: If amount is negative
     """
-    assert amount >= 0
+    if amount < 0:
+        raise ValueError("Amount may not be negative")
 
     width = patches._grid_size - 1
     height = width
@@ -35,8 +45,7 @@ def generate_random_coordinates(
             y = random.randint(0, height)
             current_cord = Coordinates(x, y)
 
-        if current_cord is not None:
-            coordinates.add(current_cord)
+        coordinates.add(current_cord)
 
     return list(coordinates)
 

@@ -1,5 +1,3 @@
-from typing import Any
-
 from src.components.sensors.sensor import Sensor
 from src.components.sensors.sensor_connection_utils import (
     udg_connection,
@@ -11,7 +9,7 @@ from src.engine.geonet import GeoNetConfig, GeoNetEngine
 from src.engine.grid import PatchesGrid
 
 
-def on_receive(sensor: Sensor, values: list[float]) -> None:
+def on_receive(sensor: Sensor[bool], values: list[float]) -> None:
     if sensor.state:
         return
 
@@ -20,10 +18,8 @@ def on_receive(sensor: Sensor, values: list[float]) -> None:
     sensor.broadcast(values)
 
 
-def udg_autotune_setup(
-    manager: SensorManager, patches: PatchesGrid, global_state: Any
-) -> Any:
-    sensors = manager.create_sensors(
+def udg_autotune_setup(manager: SensorManager, _patches: PatchesGrid) -> None:
+    sensors = manager.create_and_append_sensors(
         amount=50, initial_state=False, on_receive=on_receive
     )
     manager.append_multiple_sensors(sensors)
@@ -31,8 +27,8 @@ def udg_autotune_setup(
     sensors[0].transmit(sensors[0], [1.0])
 
 
-def udg_setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
-    sensors = manager.create_sensors(
+def udg_setup(manager: SensorManager, _patches: PatchesGrid) -> None:
+    sensors = manager.create_and_append_sensors(
         amount=50, initial_state=False, on_receive=on_receive
     )
     manager.connect_sensors_if(sensors, udg_connection(10))

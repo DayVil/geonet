@@ -1,5 +1,4 @@
 from enum import Enum, auto
-from typing import Any
 
 from examples.boundary_estimation.scenarios import load_random_scenario
 from src.components.sensors.sensor import Sensor
@@ -19,7 +18,10 @@ class State(Enum):
     OUTSIDE = auto()
 
 
-def on_receive(sensor: Sensor, values: list[float]) -> None:
+StateContainer = tuple[State, bool, PatchesGrid]
+
+
+def on_receive(sensor: Sensor[StateContainer], values: list[float]) -> None:
     current_state, send, patches = sensor.state
 
     if send:
@@ -47,9 +49,22 @@ def on_receive(sensor: Sensor, values: list[float]) -> None:
             sensor.color = Color.RED
 
 
-def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
+def on_update(
+    manager: SensorManager, patches: PatchesGrid, _global_state: None
+) -> None:
+    sensors: list[Sensor[StateContainer]] = manager.list_sensors()
+    for sensor in sensors:
+        if sensor.state[0] != State.INIT:
+            continue
+        color = patches.get_color(sensor.position)
+        value = 1.0 if color == Color.NAVY else 0.0
+
+        sensor.transmit(sensor, [value])
+
+
+def setup(manager: SensorManager, patches: PatchesGrid) -> None:
     load_random_scenario(patches)
-    sensors = manager.create_sensors(
+    sensors: list[Sensor[StateContainer]] = manager.create_and_append_sensors(
         amount=150,
         initial_state=(State.INIT, False, patches),
         on_receive=on_receive,
@@ -58,17 +73,6 @@ def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> An
 
     for sensor in sensors:
         sensor.color = Color.SAGE
-
-
-def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
-    sensors = manager.list_sensors()
-    for sensor in sensors:
-        if sensor.state[0] != State.INIT:
-            continue
-        color = patches.get_color(sensor.position)
-        value = 1.0 if color == Color.NAVY else 0.0
-
-        sensor.transmit(sensor, [value])
 
 
 def static_rain_run():

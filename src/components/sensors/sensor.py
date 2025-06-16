@@ -1,13 +1,14 @@
+# pyright: reportImportCycles=false, reportPrivateUsage=false, reportUnusedFunction=false
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar, final, override
 import uuid
 
 import pygame
 
-from src.components.coords.coordinate_utils import generate_random_coordinates
 from src.components.coords.coordinates import Coordinates
 from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
+@final
 class Sensor(Generic[T]):
     """
     A generic sensor class for sensor network simulations.
@@ -83,7 +85,7 @@ class Sensor(Generic[T]):
         self._state: T = deepcopy(initial_state)
         self._current_patch_color = self._grid.get_color(self._cords)
 
-        self._neighbour: set[Sensor] = set()
+        self._neighbour: set[Sensor[T]] = set()
 
         self._sensor_manager: SensorManager | None = None
 
@@ -111,7 +113,7 @@ class Sensor(Generic[T]):
         return self._cords
 
     @position.setter
-    def set_position(self, cords: Coordinates) -> None:
+    def position(self, cords: Coordinates) -> None:
         """
         Set the position of the sensor.
 
@@ -121,8 +123,6 @@ class Sensor(Generic[T]):
         Raises:
             ValueError: If cords is not a Coordinates instance
         """
-        if not isinstance(cords, Coordinates):
-            raise ValueError("you may only use Coordinates")
         self._cords = deepcopy(cords)
 
     @property
@@ -176,19 +176,17 @@ class Sensor(Generic[T]):
         Raises:
             ValueError: If color is not a Color instance
         """
-        if not isinstance(color, Color):
-            raise ValueError("you may only use Color")
         self._current_color = color
 
     # =======================
     # Communication methods
     # =======================
-    def transmit(self, to_sensor: Sensor, values: list[float]) -> None:
+    def transmit(self, to_sensor: Sensor[T], values: list[float]) -> None:
         """
         Send a message to a specific sensor.
 
         Args:
-            to_sensor (Sensor): The target sensor to send the message to
+            to_sensor (Sensor[T]): The target sensor to send the message to
             values (list[float]): List of numerical values to transmit
         """
         if len(values) == 0:
@@ -198,7 +196,7 @@ class Sensor(Generic[T]):
             self._sensor_manager._mark_transmission(self.id, to_sensor.id)
         to_sensor._write_to_transmit_buffer(values)
 
-    def broadcast(self, values: list[float] | list[float]):
+    def broadcast(self, values: list[float]):
         """
         Broadcast a message to all neighboring sensors.
 
@@ -244,6 +242,7 @@ class Sensor(Generic[T]):
     # =======================
     # String representation and comparison
     # =======================
+    @override
     def __repr__(self) -> str:
         """
         Return a string representation of the sensor.
@@ -253,6 +252,7 @@ class Sensor(Generic[T]):
         """
         return self.__str__()
 
+    @override
     def __str__(self) -> str:
         """
         Return a string representation of the sensor.
@@ -262,12 +262,13 @@ class Sensor(Generic[T]):
         """
         return f"Sensor: \n\tid = {self._id}\n\tcords = {self._cords}\n\tcolor = {self.color}"
 
-    def __eq__(self, other: Sensor[T]) -> bool:
+    @override
+    def __eq__(self, other: object) -> bool:
         """
         Check equality with another sensor based on ID.
 
         Args:
-            other (Sensor[T]): The other sensor to compare with
+            other (object): The other object to compare with
 
         Returns:
             bool: True if sensors have the same ID, False otherwise
@@ -276,6 +277,7 @@ class Sensor(Generic[T]):
             return False
         return self._id == other._id
 
+    @override
     def __hash__(self) -> int:
         """
         Return hash of the sensor based on its ID.
@@ -336,46 +338,4 @@ class Sensor(Generic[T]):
         dot_color = self._current_color
 
         true_pos = offset.grid_to_pixel(int(self._cords.x), int(self._cords.y))
-        pygame.draw.circle(surface, dot_color.to_tuple(), true_pos, dot_radius)
-
-
-# =======================
-# Utility functions for sensor creation
-# =======================
-def create_sensors(
-    amount: int,
-    grid: PatchesGrid,
-    initial_state: Any = None,
-    on_receive: Callable[[Sensor[T], list[float]], None] | None = None,
-    on_measurement_change: Callable[[Sensor[T], Color], None] | None = None,
-) -> list[Sensor[T]]:
-    """
-    Create a specified number of sensors with random positions on the grid.
-
-    This utility function creates multiple sensors and places them at random,
-    non-overlapping positions on the grid.
-
-    Args:
-        amount (int): Number of sensors to create
-        grid (PatchesGrid): The grid system to place sensors on
-        initial_state (Any, optional): Initial state for all sensors. Defaults to None.
-        on_receive (Callable, optional): Callback function for message reception.
-            Function signature: (sensor, messages) -> None
-        on_measurement_change (Callable, optional): Callback function for environmental
-            changes. Function signature: (sensor, new_color) -> None
-
-    Returns:
-        list[Sensor[T]]: List of created sensors with random positions
-    """
-    coordinates = generate_random_coordinates(grid, amount)
-
-    return [
-        Sensor(
-            cords=cord,
-            patches=grid,
-            initial_state=initial_state,
-            on_receive=on_receive,
-            on_measurement_change=on_measurement_change,
-        )
-        for cord in coordinates
-    ]
+        _ = pygame.draw.circle(surface, dot_color.to_tuple(), true_pos, dot_radius)

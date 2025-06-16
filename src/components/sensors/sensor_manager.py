@@ -1,23 +1,31 @@
+# pyright: reportUnknownMemberType=false, reportExplicitAny=false, reportUnknownArgumentType=false
+# pyright: reportUnknownVariableType=false, reportAny=false, reportPrivateUsage=false, reportUnusedFunction=false
+
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from copy import deepcopy
 from itertools import combinations
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, final
 import uuid
 
 import networkx as nx
 import pygame
 
-from src.components.sensors.sensor import Sensor, create_sensors
+from src.components.sensors.sensor_creation_utils import create_sensors
 from src.components.sensors.sensor_math import euclid_distance
 from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
 
 
+if TYPE_CHECKING:
+    from src.components.sensors.sensor import Sensor
+
+
 T = TypeVar("T")
 
 
+@final
 class SensorManager:
     """
     Manages a collection of sensors and their network connections.
@@ -48,21 +56,21 @@ class SensorManager:
     # =======================
     # Information retrieval methods
     # =======================
-    def list_sensors(self) -> list[Sensor]:
+    def list_sensors(self) -> list[Sensor[T]]:
         """
         Get a list of all sensors managed by this manager.
 
         Returns:
-            list[Sensor]: List of all sensors in the network
+            list[Sensor[T]]: List of all sensors in the network
         """
         return [data["sensor"] for _, data in self._nx_graph.nodes(data=True)]
 
-    def list_edges(self) -> list[tuple[Sensor, Sensor, dict]]:
+    def list_edges(self) -> list[tuple[Sensor[T], Sensor[T], Any]]:
         """
         Get a list of all connections between sensors.
 
         Returns:
-            list[tuple[Sensor, Sensor, dict]]: List of tuples containing
+            list[tuple[Sensor[T], Sensor[T], Any]]: List of tuples containing
                 (sensor1, sensor2, edge_data) for each connection
         """
         edges = []
@@ -72,15 +80,15 @@ class SensorManager:
             edges.append((sensor1, sensor2, edge_data))
         return edges
 
-    def get_connected_sensors(self, sensor: Sensor) -> list[Sensor]:
+    def get_connected_sensors(self, sensor: Sensor[T]) -> list[Sensor[T]]:
         """
         Get all sensors directly connected to a given sensor.
 
         Args:
-            sensor (Sensor): The sensor to find neighbors for
+            sensor (Sensor[T]): The sensor to find neighbors for
 
         Returns:
-            list[Sensor]: List of sensors connected to the given sensor
+            list[Sensor[T]]: List of sensors connected to the given sensor
         """
         if sensor.id not in self._nx_graph:
             return []
@@ -95,13 +103,31 @@ class SensorManager:
     # =======================
     # Sensor management methods
     # =======================
-    def create_sensors(
+    def create_and_append_sensors(
         self,
         amount: int,
         initial_state: T,
         on_receive: Callable[[Sensor[T], list[float]], None] | None = None,
         on_measurement_change: Callable[[Sensor[T], Color], None] | None = None,
     ) -> list[Sensor[T]]:
+        """
+        Create multiple sensors with random positions and add them to the network.
+
+        This is a convenience method that combines sensor creation and network addition.
+        It creates the specified number of sensors with random positions on the grid
+        and immediately adds them to the sensor network for management.
+
+        Args:
+            amount (int): Number of sensors to create
+            initial_state (T): Initial state for all created sensors
+            on_receive (Callable, optional): Callback function for message reception.
+                Function signature: (sensor, messages) -> None
+            on_measurement_change (Callable, optional): Callback function for environmental
+                changes. Function signature: (sensor, new_color) -> None
+
+        Returns:
+            list[Sensor[T]]: List of created and added sensors
+        """
         sensors = create_sensors(
             amount,
             self._grid,
@@ -112,12 +138,12 @@ class SensorManager:
         self.append_multiple_sensors(sensors)
         return sensors
 
-    def append_sensor(self, sensor: Sensor) -> None:
+    def append_sensor(self, sensor: Sensor[T]) -> None:
         """
         Add a sensor to the network.
 
         Args:
-            sensor (Sensor): The sensor to add to the network
+            sensor (Sensor[T]): The sensor to add to the network
         """
         if sensor.id not in self._nx_graph:
             sensor._sensor_manager = self
@@ -128,7 +154,7 @@ class SensorManager:
         Add multiple sensors to the network.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to add
+            sensors (list[Sensor[T]]): Collection of sensors to add
         """
         for sensor in sensors:
             self.append_sensor(sensor)
@@ -138,16 +164,16 @@ class SensorManager:
     # =======================
     def connect_sensors(
         self,
-        sensor1: Sensor,
-        sensor2: Sensor,
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        sensor1: Sensor[T],
+        sensor2: Sensor[T],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Create a connection between two sensors.
 
         Args:
-            sensor1 (Sensor): First sensor to connect
-            sensor2 (Sensor): Second sensor to connect
+            sensor1 (Sensor[T]): First sensor to connect
+            sensor2 (Sensor[T]): Second sensor to connect
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.
         """
@@ -168,13 +194,13 @@ class SensorManager:
             sensor1._neighbour.add(sensor2)
             sensor2._neighbour.add(sensor1)
 
-    def disconnect_sensors(self, sensor1: Sensor, sensor2: Sensor) -> None:
+    def disconnect_sensors(self, sensor1: Sensor[T], sensor2: Sensor[T]) -> None:
         """
         Remove the connection between two sensors.
 
         Args:
-            sensor1 (Sensor): First sensor to disconnect
-            sensor2 (Sensor): Second sensor to disconnect
+            sensor1 (Sensor[T]): First sensor to disconnect
+            sensor2 (Sensor[T]): Second sensor to disconnect
         """
         if sensor1.id not in self._nx_graph:
             self.append_sensor(sensor1)
@@ -186,12 +212,12 @@ class SensorManager:
         sensor1._neighbour.remove(sensor2)
         sensor2._neighbour.remove(sensor1)
 
-    def disconnect_multiple_sensors(self, sensors: Sequence[Sensor]) -> None:
+    def disconnect_multiple_sensors(self, sensors: Sequence[Sensor[T]]) -> None:
         """
         Remove all connections between a group of sensors.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to disconnect from each other
+            sensors (Sequence[Sensor[T]]): Collection of sensors to disconnect from each other
         """
         for sensor1, sensor2 in combinations(sensors, 2):
             self.disconnect_sensors(sensor1, sensor2)
@@ -201,8 +227,8 @@ class SensorManager:
     # =======================
     def connect_sensors_mesh(
         self,
-        sensors: Sequence[Sensor],
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        sensors: Sequence[Sensor[T]],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Connect all sensors to each other in a full mesh topology.
@@ -211,7 +237,7 @@ class SensorManager:
         sensor. This provides maximum connectivity but high network overhead.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to connect
+            sensors (Sequence[Sensor[T]]): Collection of sensors to connect
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.
         """
@@ -220,8 +246,8 @@ class SensorManager:
 
     def connect_sensors_chain(
         self,
-        sensors: Sequence[Sensor],
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        sensors: Sequence[Sensor[T]],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Connect sensors in a linear chain topology.
@@ -230,7 +256,7 @@ class SensorManager:
         provides minimal connectivity with potential for network partitioning.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to connect in sequence
+            sensors (Sequence[Sensor[T]]): Collection of sensors to connect in sequence
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.
         """
@@ -246,9 +272,9 @@ class SensorManager:
 
     def connect_sensors_star(
         self,
-        center_sensor: Sensor,
-        sensors: Sequence[Sensor],
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        center_sensor: Sensor[T],
+        sensors: Sequence[Sensor[T]],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Connect sensors in a star topology with a central hub.
@@ -257,8 +283,8 @@ class SensorManager:
         This provides a single point of failure but efficient centralized communication.
 
         Args:
-            center_sensor (Sensor): The sensor to use as the central hub
-            sensors (Sequence[Sensor]): Collection of sensors to connect to the center
+            center_sensor (Sensor[T]): The sensor to use as the central hub
+            sensors (Sequence[Sensor[T]]): Collection of sensors to connect to the center
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.
         """
@@ -271,9 +297,9 @@ class SensorManager:
 
     def connect_sensors_if(
         self,
-        sensors: Sequence[Sensor],
-        condition: Callable[[Sensor, Sensor], bool],
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        sensors: Sequence[Sensor[T]],
+        condition: Callable[[Sensor[T], Sensor[T]], bool],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Connect sensors based on a custom condition function.
@@ -282,8 +308,8 @@ class SensorManager:
         condition function for each pair of sensors.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to evaluate
-            condition (Callable[[Sensor, Sensor], bool]): Function that returns
+            sensors (Sequence[Sensor[T]]): Collection of sensors to evaluate
+            condition (Callable[[Sensor[T], Sensor[T]], bool]): Function that returns
                 True if two sensors should be connected
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.
@@ -337,8 +363,8 @@ class SensorManager:
             pos1 = sensor1.position
             pos2 = sensor2.position
 
-            pixel_pos1 = self._grid.grid_to_pixel(pos1.x, pos1.y)
-            pixel_pos2 = self._grid.grid_to_pixel(pos2.x, pos2.y)
+            pixel_pos1 = self._grid.grid_to_pixel(int(pos1.x), int(pos1.y))
+            pixel_pos2 = self._grid.grid_to_pixel(int(pos2.x), int(pos2.y))
 
             is_transmitting = edge_data.get("is_transmitting", False)
             if is_transmitting:
@@ -348,7 +374,7 @@ class SensorManager:
                 color = Color.CONNECTION_GRAY
                 line_width = 2
 
-            pygame.draw.line(
+            _ = pygame.draw.line(
                 screen, color.to_tuple(), pixel_pos1, pixel_pos2, line_width
             )
 

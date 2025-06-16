@@ -7,6 +7,8 @@ coordinate transformations, and visual rendering of the simulation space.
 
 from __future__ import annotations
 
+from typing import final
+
 import pygame
 
 from src.components.coords.coordinates import Coordinates
@@ -14,6 +16,7 @@ from src.components.coords.coordinates import Coordinates
 from .geo_color import Color
 
 
+@final
 class PatchesGrid:
     """
     A grid system for managing colored patches in a sensor network simulation.
@@ -212,10 +215,6 @@ class PatchesGrid:
         Raises:
             ValueError: If coordinates are not a Coordinates instance or are out of bounds
         """
-        if not isinstance(cord, Coordinates):
-            raise ValueError(
-                f"cord may only be of type Coordinates but received: {type(cord)}"
-            )
         if self._grid_size <= cord.x or cord.x < 0:
             raise ValueError(
                 f"Please stay inside the width confines of inclusive 0 to exclusive {self._grid_size} your value was {cord.x}"
@@ -243,11 +242,11 @@ class PatchesGrid:
                 self._cell_size,
                 self._cell_size,
             )
-            pygame.draw.rect(screen, color.to_tuple(), rect)
+            _ = pygame.draw.rect(screen, color.to_tuple(), rect)
         # Draw vertical lines
         for i in range(self._grid_size + 1):
             x = self._offset_x + i * self._cell_size
-            pygame.draw.line(
+            _ = pygame.draw.line(
                 screen,
                 Color.LIGHT_GRAY.to_tuple(),
                 (x, self._offset_y),
@@ -258,7 +257,7 @@ class PatchesGrid:
         # Draw horizontal lines
         for i in range(self._grid_size + 1):
             y = self._offset_y + i * self._cell_size
-            pygame.draw.line(
+            _ = pygame.draw.line(
                 screen,
                 Color.LIGHT_GRAY.to_tuple(),
                 (self._offset_x, y),
@@ -267,7 +266,7 @@ class PatchesGrid:
             )
 
         # Draw grid border
-        pygame.draw.rect(
+        _ = pygame.draw.rect(
             screen,
             Color.GRAY.to_tuple(),
             (

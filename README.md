@@ -82,7 +82,7 @@ A Python-based sensor network simulation framework with real-time visualization 
 
 ```python
 from src.engine.geonet import GeoNetEngine, GeoNetConfig
-from src.components.sensors.sensor import create_sensors
+from src.components.sensors.sensor_creation_utils import create_sensors
 from src.engine.geo_color import Color
 
 def on_receive(sensor, values):
@@ -92,7 +92,7 @@ def on_receive(sensor, values):
     sensor.color = Color.GREEN
     sensor.broadcast(values)
 
-def setup(manager, patches, global_state):
+def setup(manager, patches):
     """Initialize the simulation"""
     sensors = create_sensors(
         amount=20,
@@ -104,7 +104,8 @@ def setup(manager, patches, global_state):
     manager.connect_sensors_chain(sensors)
     
     # Start transmission from first sensor
-    sensors[0].transmit(sensors[0], [1.0])
+    sensors[0].transmit(sensors[1], [1.0])
+    return {"initialized": True}
 
 # Run the simulation
 engine = GeoNetEngine(GeoNetConfig(window_title="My Network"))
@@ -159,11 +160,13 @@ Watch GeoNet in action with these example demonstrations:
 #### Sensors (`/src/components/sensors/`)
 - **`sensor.py`**: Core sensor class with communication capabilities
 - **`sensor_manager.py`**: Management and coordination of multiple sensors
+- **`sensor_creation_utils.py`**: Utilities for creating and initializing sensors
 - **`sensor_connection_utils.py`**: Algorithms for sensor network topologies
 - **`sensor_math.py`**: Mathematical utilities for sensor operations
 
 #### Components (`/src/components/`)
-- **`coordinates.py`**: Coordinate system utilities
+- **`coordinates.py`**: Coordinate system and spatial calculations
+- **`coordinate_utils.py`**: Utilities for coordinate generation and manipulation
 
 ### Connection Types
 
@@ -205,7 +208,7 @@ engine = GeoNetEngine(config)
 ### Creating Sensors
 
 ```python
-from src.components.sensors.sensor import create_sensors
+from src.components.sensors.sensor_creation_utils import create_sensors
 
 sensors = create_sensors(
     amount=50,                    # Number of sensors
@@ -242,7 +245,7 @@ from src.components.sensors.sensor_connection_utils import (
 )
 
 # Unit Disk Graph with fixed radius
-manager.connect_sensors_if(sensors, udg_connection(radius=10))
+manager.connect_sensors_if(sensors, udg_connection(distance=10))
 
 # Gabriel Graph
 manager.connect_sensors_if(sensors, gg_connection(sensors))
