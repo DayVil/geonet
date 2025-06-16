@@ -1,7 +1,7 @@
 from collections.abc import Callable
 import random
 
-from src.components.coordinates import Coordinates
+from src.components.coords.coordinates import Coordinates
 from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
 

@@ -47,6 +47,7 @@ skip-magic-trailing-comma = false
 
 [dependency-groups]
 dev = [
+    "basedpyright>=1.29.4",
     "pre-commit>=4.2.0",
     "ruff>=0.11.13",
     "sphinx>=8.2.3",

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from copy import deepcopy
-import random
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 import uuid
 
 import pygame
 
-from src.components.coordinates import Coordinates
+from src.components.coords.coordinate_utils import generate_random_coordinates
+from src.components.coords.coordinates import Coordinates
 from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
 
@@ -367,22 +367,11 @@ def create_sensors(
     Returns:
         list[Sensor[T]]: List of created sensors with random positions
     """
-    width = grid._grid_size - 1
-    height = width
-
-    coordinates = set()
-    for _ in range(amount):
-        current_cord = ()
-        while current_cord in coordinates or current_cord == ():
-            x = random.randint(0, width)
-            y = random.randint(0, height)
-            current_cord = (x, y)
-
-        coordinates.add(current_cord)
+    coordinates = generate_random_coordinates(grid, amount)
 
     return [
         Sensor(
-            cords=Coordinates(cord[0], cord[1]),
+            cords=cord,
             patches=grid,
             initial_state=initial_state,
             on_receive=on_receive,
