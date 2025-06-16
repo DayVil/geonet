@@ -1,5 +1,3 @@
-from typing import Any
-
 from src.components.sensors.sensor import Sensor
 from src.components.sensors.sensor_connection_utils import gg_connection
 from src.components.sensors.sensor_manager import SensorManager
@@ -8,7 +6,7 @@ from src.engine.geonet import GeoNetConfig, GeoNetEngine
 from src.engine.grid import PatchesGrid
 
 
-def on_receive(sensor: Sensor, values: list[float]) -> None:
+def on_receive(sensor: Sensor[bool], values: list[float]) -> None:
     if sensor.state:
         return
 
@@ -17,8 +15,8 @@ def on_receive(sensor: Sensor, values: list[float]) -> None:
     sensor.broadcast(values)
 
 
-def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
-    sensors = manager.create_sensors(
+def setup(manager: SensorManager, _patches: PatchesGrid) -> None:
+    sensors = manager.create_and_append_sensors(
         amount=50, initial_state=False, on_receive=on_receive
     )
     manager.connect_sensors_if(sensors, gg_connection(sensors))

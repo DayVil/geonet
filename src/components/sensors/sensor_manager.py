@@ -1,23 +1,31 @@
+# pyright: reportUnknownMemberType=false, reportExplicitAny=false, reportUnknownArgumentType=false
+# pyright: reportUnknownVariableType=false, reportAny=false, reportPrivateUsage=false, reportUnusedFunction=false
+
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from copy import deepcopy
 from itertools import combinations
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, final
 import uuid
 
 import networkx as nx
 import pygame
 
-from src.components.sensors.sensor import Sensor, create_sensors
+from src.components.sensors.sensor_creation_utils import create_sensors
 from src.components.sensors.sensor_math import euclid_distance
 from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
 
 
+if TYPE_CHECKING:
+    from src.components.sensors.sensor import Sensor
+
+
 T = TypeVar("T")
 
 
+@final
 class SensorManager:
     """
     Manages a collection of sensors and their network connections.
@@ -48,7 +56,7 @@ class SensorManager:
     # =======================
     # Information retrieval methods
     # =======================
-    def list_sensors(self) -> list[Sensor]:
+    def list_sensors(self) -> list[Sensor[T]]:
         """
         Get a list of all sensors managed by this manager.
 
@@ -57,7 +65,7 @@ class SensorManager:
         """
         return [data["sensor"] for _, data in self._nx_graph.nodes(data=True)]
 
-    def list_edges(self) -> list[tuple[Sensor, Sensor, dict]]:
+    def list_edges(self) -> list[tuple[Sensor[T], Sensor[T], Any]]:
         """
         Get a list of all connections between sensors.
 
@@ -72,7 +80,7 @@ class SensorManager:
             edges.append((sensor1, sensor2, edge_data))
         return edges
 
-    def get_connected_sensors(self, sensor: Sensor) -> list[Sensor]:
+    def get_connected_sensors(self, sensor: Sensor[T]) -> list[Sensor[T]]:
         """
         Get all sensors directly connected to a given sensor.
 
@@ -95,7 +103,7 @@ class SensorManager:
     # =======================
     # Sensor management methods
     # =======================
-    def create_sensors(
+    def create_and_append_sensors(
         self,
         amount: int,
         initial_state: T,
@@ -112,7 +120,7 @@ class SensorManager:
         self.append_multiple_sensors(sensors)
         return sensors
 
-    def append_sensor(self, sensor: Sensor) -> None:
+    def append_sensor(self, sensor: Sensor[T]) -> None:
         """
         Add a sensor to the network.
 
@@ -138,9 +146,9 @@ class SensorManager:
     # =======================
     def connect_sensors(
         self,
-        sensor1: Sensor,
-        sensor2: Sensor,
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        sensor1: Sensor[T],
+        sensor2: Sensor[T],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Create a connection between two sensors.
@@ -168,7 +176,7 @@ class SensorManager:
             sensor1._neighbour.add(sensor2)
             sensor2._neighbour.add(sensor1)
 
-    def disconnect_sensors(self, sensor1: Sensor, sensor2: Sensor) -> None:
+    def disconnect_sensors(self, sensor1: Sensor[T], sensor2: Sensor[T]) -> None:
         """
         Remove the connection between two sensors.
 
@@ -186,7 +194,7 @@ class SensorManager:
         sensor1._neighbour.remove(sensor2)
         sensor2._neighbour.remove(sensor1)
 
-    def disconnect_multiple_sensors(self, sensors: Sequence[Sensor]) -> None:
+    def disconnect_multiple_sensors(self, sensors: Sequence[Sensor[T]]) -> None:
         """
         Remove all connections between a group of sensors.
 
@@ -201,8 +209,8 @@ class SensorManager:
     # =======================
     def connect_sensors_mesh(
         self,
-        sensors: Sequence[Sensor],
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        sensors: Sequence[Sensor[T]],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Connect all sensors to each other in a full mesh topology.
@@ -220,8 +228,8 @@ class SensorManager:
 
     def connect_sensors_chain(
         self,
-        sensors: Sequence[Sensor],
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        sensors: Sequence[Sensor[T]],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Connect sensors in a linear chain topology.
@@ -246,9 +254,9 @@ class SensorManager:
 
     def connect_sensors_star(
         self,
-        center_sensor: Sensor,
-        sensors: Sequence[Sensor],
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        center_sensor: Sensor[T],
+        sensors: Sequence[Sensor[T]],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Connect sensors in a star topology with a central hub.
@@ -271,9 +279,9 @@ class SensorManager:
 
     def connect_sensors_if(
         self,
-        sensors: Sequence[Sensor],
-        condition: Callable[[Sensor, Sensor], bool],
-        distance_metric: Callable[[Sensor, Sensor], float] = euclid_distance,
+        sensors: Sequence[Sensor[T]],
+        condition: Callable[[Sensor[T], Sensor[T]], bool],
+        distance_metric: Callable[[Sensor[T], Sensor[T]], float] = euclid_distance,
     ) -> None:
         """
         Connect sensors based on a custom condition function.
@@ -337,8 +345,8 @@ class SensorManager:
             pos1 = sensor1.position
             pos2 = sensor2.position
 
-            pixel_pos1 = self._grid.grid_to_pixel(pos1.x, pos1.y)
-            pixel_pos2 = self._grid.grid_to_pixel(pos2.x, pos2.y)
+            pixel_pos1 = self._grid.grid_to_pixel(int(pos1.x), int(pos1.y))
+            pixel_pos2 = self._grid.grid_to_pixel(int(pos2.x), int(pos2.y))
 
             is_transmitting = edge_data.get("is_transmitting", False)
             if is_transmitting:
@@ -348,7 +356,7 @@ class SensorManager:
                 color = Color.CONNECTION_GRAY
                 line_width = 2
 
-            pygame.draw.line(
+            _ = pygame.draw.line(
                 screen, color.to_tuple(), pixel_pos1, pixel_pos2, line_width
             )
 

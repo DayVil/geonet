@@ -1,5 +1,4 @@
 from enum import Enum, auto
-from typing import Any
 
 from examples.boundary_estimation.scenarios import load_random_scenario
 from src.components.sensors.sensor import Sensor
@@ -18,6 +17,10 @@ class State(Enum):
     BNDY = auto()
 
 
+StateContainer = dict[str, State | bool]
+GlobalStateContainer = dict[str, int]
+
+
 def color_to_float(color: Color) -> float:
     if color == Color.NAVY:
         return 1.0
@@ -25,11 +28,11 @@ def color_to_float(color: Color) -> float:
         return 0.0
 
 
-def on_receive(sensor: Sensor, values: list[float]) -> None:
+def on_receive(sensor: Sensor[StateContainer], values: list[float]) -> None:
     if len(values) == 0:
         return
 
-    state: State = sensor.state["current_state"]
+    state = sensor.state["current_state"]
 
     match state:
         case State.INIT:
@@ -56,13 +59,18 @@ def on_receive(sensor: Sensor, values: list[float]) -> None:
         case State.BNDY:
             pass
 
+        case _:
+            pass
 
-def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
+
+def on_update(
+    manager: SensorManager, patches: PatchesGrid, global_state: GlobalStateContainer
+) -> GlobalStateContainer:
     if global_state["count"] % 7 == 0:
         patches.clear_color()
         load_random_scenario(patches)
 
-    sensors = manager.list_sensors()
+    sensors: list[Sensor[StateContainer]] = manager.list_sensors()
     if global_state["count"] % 4 == 0:
         for sensor in sensors:
             sensor.state["current_state"] = State.INIT
@@ -78,8 +86,8 @@ def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -
     return global_state
 
 
-def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
-    sensors = manager.create_sensors(
+def setup(manager: SensorManager, _patches: PatchesGrid) -> GlobalStateContainer:
+    sensors = manager.create_and_append_sensors(
         amount=90,
         initial_state={"current_state": State.INIT, "send": False},
         on_receive=on_receive,

@@ -1,3 +1,5 @@
+# pyright: reportAny=false, reportPrivateUsage=false, reportUnusedFunction=false
+
 """
 Main GeoNet simulation engine and configuration.
 
@@ -10,13 +12,17 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any
+from typing import TypeVar, final
 
 import pygame
 
+from src.components.sensors.sensor import Sensor
 from src.components.sensors.sensor_manager import SensorManager
 from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
+
+
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -48,6 +54,7 @@ class GeoNetConfig:
     update_interval: int = 700
 
 
+@final
 class GeoNetEngine:
     """
     The main engine class for the GeoNet sensor network simulation.
@@ -99,7 +106,7 @@ class GeoNetEngine:
         pygame.font.init()
         self._font = pygame.font.Font(None, 24)
 
-    def _handle_events(self) -> None:
+    def _handle_events[T](self) -> None:
         """
         Process pygame events including window close, keyboard input, and mouse clicks.
 
@@ -120,7 +127,7 @@ class GeoNetEngine:
                     if is_valid:
                         print("=" * 10)
                         print(f"Clicked grid position: {grid_pos}")
-                        sensors = self._sensor_manager.list_sensors()
+                        sensors: list[Sensor[T]] = self._sensor_manager.list_sensors()
                         for sensor in sensors:
                             if sensor.position == grid_pos:
                                 print(sensor)
@@ -130,9 +137,9 @@ class GeoNetEngine:
 
     def _update(
         self,
-        update_fn: Callable[[SensorManager, PatchesGrid, Any], Any] | None,
-        global_state: Any,
-    ) -> Any:
+        update_fn: Callable[[SensorManager, PatchesGrid, T], T],
+        global_state: T,
+    ) -> T:
         """
         Update the simulation state by calling the user-provided update function.
 
@@ -145,10 +152,8 @@ class GeoNetEngine:
             Any: Updated global state returned from the update function
         """
 
-        def inner_update(global_state: Any) -> Any:
-            if update_fn is not None:
-                return update_fn(self._sensor_manager, self._grid, global_state)
-            return global_state
+        def inner_update(global_state: T) -> T:
+            return update_fn(self._sensor_manager, self._grid, global_state)
 
         new_global_state = self._sensor_manager._update(inner_update, global_state)
         return new_global_state
@@ -161,14 +166,14 @@ class GeoNetEngine:
         """
         self._tick_counter += 1
 
-        self._screen.fill(Color.BLACK.to_tuple())
+        _ = self._screen.fill(Color.BLACK.to_tuple())
 
         tick_text = self._font.render(
             f"Ticks: {self._tick_counter}", True, Color.WHITE.to_tuple()
         )
         tick_x = 10
         tick_y = 10
-        self._screen.blit(tick_text, (tick_x, tick_y))
+        _ = self._screen.blit(tick_text, (tick_x, tick_y))
 
         self._grid._draw(self._screen)
         self._sensor_manager._draw(self._screen)
@@ -176,8 +181,11 @@ class GeoNetEngine:
 
     def main_loop(
         self,
-        setup_fn: Callable[[SensorManager, PatchesGrid, Any], Any] | None = None,
-        update_fn: Callable[[SensorManager, PatchesGrid, Any], Any] | None = None,
+        setup_fn: Callable[[SensorManager, PatchesGrid], T] = lambda manager,
+        patches: None,
+        update_fn: Callable[[SensorManager, PatchesGrid, T], T] = lambda manager,
+        patches,
+        global_state: None,
     ) -> None:
         """
         Run the main simulation loop.
@@ -194,10 +202,8 @@ class GeoNetEngine:
                 interval to update the simulation state. Receives sensor manager,
                 grid, and current global state.
         """
-        global_state: Any = None
-        if setup_fn is not None:
-            new_state = setup_fn(self._sensor_manager, self._grid, global_state)
-            global_state = deepcopy(new_state)
+
+        global_state = setup_fn(self._sensor_manager, self._grid)
         last_draw_time = pygame.time.get_ticks()
         first_draw = True
         while not self._quit:
@@ -211,6 +217,6 @@ class GeoNetEngine:
                 global_state = deepcopy(new_global_state)
                 last_draw_time = pygame.time.get_ticks()
 
-            self._clock.tick(self._cfg.fps)
+            _ = self._clock.tick(self._cfg.fps)
 
         pygame.quit()

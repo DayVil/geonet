@@ -1,7 +1,12 @@
+from typing import TypeVar
+
 from src.components.sensors.sensor import Sensor
 
 
-def euclid_distance(sensor1: Sensor, sensor2: Sensor) -> float:
+T = TypeVar("T")
+
+
+def euclid_distance(sensor1: Sensor[T], sensor2: Sensor[T]) -> float:
     """
     Calculate the Euclidean distance between two sensors.
 
