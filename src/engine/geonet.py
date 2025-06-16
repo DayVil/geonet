@@ -35,7 +35,7 @@ class GeoNetConfig:
 
     Attributes:
         screen_width (int): Width of the application window in pixels. Defaults to 1000.
-        screen_heigth (int): Height of the application window in pixels. Defaults to 800.
+        screen_height (int): Height of the application window in pixels. Defaults to 800.
         window_title (str): Title displayed in the window title bar. Defaults to "GeoNet".
         grid_size (int): Number of cells in the grid (square grid). Defaults to 55.
         grid_margin (int): Margin around the grid in pixels. Defaults to 10.
@@ -44,7 +44,7 @@ class GeoNetConfig:
     """
 
     screen_width: int = 1000
-    screen_heigth: int = 800
+    screen_height: int = 800
     window_title: str = "GeoNet"
 
     grid_size: int = 55
@@ -90,13 +90,13 @@ class GeoNetEngine:
         self._quit = False
         self._clock = pygame.time.Clock()
         self._screen = pygame.display.set_mode(
-            (self._cfg.screen_width, self._cfg.screen_heigth), pygame.DOUBLEBUF
+            (self._cfg.screen_width, self._cfg.screen_height), pygame.DOUBLEBUF
         )
         pygame.display.set_caption(self._cfg.window_title)
 
         self._grid = PatchesGrid(
             screen_width=self._cfg.screen_width,
-            screen_height=self._cfg.screen_heigth,
+            screen_height=self._cfg.screen_height,
             grid_size=self._cfg.grid_size,
             grid_margin=self._cfg.grid_margin,
         )
@@ -144,12 +144,12 @@ class GeoNetEngine:
         Update the simulation state by calling the user-provided update function.
 
         Args:
-            update_fn (Callable | None): User-defined update function that receives
+            update_fn (Callable[[SensorManager, PatchesGrid, T], T]): User-defined update function that receives
                 the sensor manager, grid, and global state
-            global_state (Any): Current global state of the simulation
+            global_state (T): Current global state of the simulation
 
         Returns:
-            Any: Updated global state returned from the update function
+            T: Updated global state returned from the update function
         """
 
         def inner_update(global_state: T) -> T:
@@ -195,12 +195,12 @@ class GeoNetEngine:
         and rendering the display at the configured intervals.
 
         Args:
-            setup_fn (Callable | None): Optional function called once at startup
-                to initialize the simulation. Receives sensor manager, grid, and
-                initial global state (None).
-            update_fn (Callable | None): Optional function called every update
+            setup_fn (Callable[[SensorManager, PatchesGrid], T]): Function called once at startup
+                to initialize the simulation. Receives sensor manager and grid.
+                Defaults to a lambda that returns None.
+            update_fn (Callable[[SensorManager, PatchesGrid, T], T]): Function called every update
                 interval to update the simulation state. Receives sensor manager,
-                grid, and current global state.
+                grid, and current global state. Defaults to a lambda that returns None.
         """
 
         global_state = setup_fn(self._sensor_manager, self._grid)

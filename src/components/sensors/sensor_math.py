@@ -1,3 +1,10 @@
+"""
+Mathematical operations and utilities for sensor networks.
+
+This module provides mathematical functions commonly used in sensor network
+simulations, including distance calculations and geometric operations.
+"""
+
 from typing import TypeVar
 
 from src.components.sensors.sensor import Sensor

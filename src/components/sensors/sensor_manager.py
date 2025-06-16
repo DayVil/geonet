@@ -61,7 +61,7 @@ class SensorManager:
         Get a list of all sensors managed by this manager.
 
         Returns:
-            list[Sensor]: List of all sensors in the network
+            list[Sensor[T]]: List of all sensors in the network
         """
         return [data["sensor"] for _, data in self._nx_graph.nodes(data=True)]
 
@@ -70,7 +70,7 @@ class SensorManager:
         Get a list of all connections between sensors.
 
         Returns:
-            list[tuple[Sensor, Sensor, dict]]: List of tuples containing
+            list[tuple[Sensor[T], Sensor[T], Any]]: List of tuples containing
                 (sensor1, sensor2, edge_data) for each connection
         """
         edges = []
@@ -85,10 +85,10 @@ class SensorManager:
         Get all sensors directly connected to a given sensor.
 
         Args:
-            sensor (Sensor): The sensor to find neighbors for
+            sensor (Sensor[T]): The sensor to find neighbors for
 
         Returns:
-            list[Sensor]: List of sensors connected to the given sensor
+            list[Sensor[T]]: List of sensors connected to the given sensor
         """
         if sensor.id not in self._nx_graph:
             return []
@@ -110,6 +110,24 @@ class SensorManager:
         on_receive: Callable[[Sensor[T], list[float]], None] | None = None,
         on_measurement_change: Callable[[Sensor[T], Color], None] | None = None,
     ) -> list[Sensor[T]]:
+        """
+        Create multiple sensors with random positions and add them to the network.
+
+        This is a convenience method that combines sensor creation and network addition.
+        It creates the specified number of sensors with random positions on the grid
+        and immediately adds them to the sensor network for management.
+
+        Args:
+            amount (int): Number of sensors to create
+            initial_state (T): Initial state for all created sensors
+            on_receive (Callable, optional): Callback function for message reception.
+                Function signature: (sensor, messages) -> None
+            on_measurement_change (Callable, optional): Callback function for environmental
+                changes. Function signature: (sensor, new_color) -> None
+
+        Returns:
+            list[Sensor[T]]: List of created and added sensors
+        """
         sensors = create_sensors(
             amount,
             self._grid,
@@ -125,7 +143,7 @@ class SensorManager:
         Add a sensor to the network.
 
         Args:
-            sensor (Sensor): The sensor to add to the network
+            sensor (Sensor[T]): The sensor to add to the network
         """
         if sensor.id not in self._nx_graph:
             sensor._sensor_manager = self
@@ -136,7 +154,7 @@ class SensorManager:
         Add multiple sensors to the network.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to add
+            sensors (list[Sensor[T]]): Collection of sensors to add
         """
         for sensor in sensors:
             self.append_sensor(sensor)
@@ -154,8 +172,8 @@ class SensorManager:
         Create a connection between two sensors.
 
         Args:
-            sensor1 (Sensor): First sensor to connect
-            sensor2 (Sensor): Second sensor to connect
+            sensor1 (Sensor[T]): First sensor to connect
+            sensor2 (Sensor[T]): Second sensor to connect
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.
         """
@@ -181,8 +199,8 @@ class SensorManager:
         Remove the connection between two sensors.
 
         Args:
-            sensor1 (Sensor): First sensor to disconnect
-            sensor2 (Sensor): Second sensor to disconnect
+            sensor1 (Sensor[T]): First sensor to disconnect
+            sensor2 (Sensor[T]): Second sensor to disconnect
         """
         if sensor1.id not in self._nx_graph:
             self.append_sensor(sensor1)
@@ -199,7 +217,7 @@ class SensorManager:
         Remove all connections between a group of sensors.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to disconnect from each other
+            sensors (Sequence[Sensor[T]]): Collection of sensors to disconnect from each other
         """
         for sensor1, sensor2 in combinations(sensors, 2):
             self.disconnect_sensors(sensor1, sensor2)
@@ -219,7 +237,7 @@ class SensorManager:
         sensor. This provides maximum connectivity but high network overhead.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to connect
+            sensors (Sequence[Sensor[T]]): Collection of sensors to connect
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.
         """
@@ -238,7 +256,7 @@ class SensorManager:
         provides minimal connectivity with potential for network partitioning.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to connect in sequence
+            sensors (Sequence[Sensor[T]]): Collection of sensors to connect in sequence
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.
         """
@@ -265,8 +283,8 @@ class SensorManager:
         This provides a single point of failure but efficient centralized communication.
 
         Args:
-            center_sensor (Sensor): The sensor to use as the central hub
-            sensors (Sequence[Sensor]): Collection of sensors to connect to the center
+            center_sensor (Sensor[T]): The sensor to use as the central hub
+            sensors (Sequence[Sensor[T]]): Collection of sensors to connect to the center
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.
         """
@@ -290,8 +308,8 @@ class SensorManager:
         condition function for each pair of sensors.
 
         Args:
-            sensors (Sequence[Sensor]): Collection of sensors to evaluate
-            condition (Callable[[Sensor, Sensor], bool]): Function that returns
+            sensors (Sequence[Sensor[T]]): Collection of sensors to evaluate
+            condition (Callable[[Sensor[T], Sensor[T]], bool]): Function that returns
                 True if two sensors should be connected
             distance_metric (Callable, optional): Function to calculate distance
                 between sensors. Defaults to euclid_distance.

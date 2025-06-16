@@ -1,3 +1,10 @@
+"""
+Utility functions for coordinate generation and manipulation.
+
+This module provides functions for generating random coordinates within grid bounds,
+useful for placing sensors and other objects in the simulation space.
+"""
+
 # pyright: reportPrivateUsage=false
 
 from __future__ import annotations

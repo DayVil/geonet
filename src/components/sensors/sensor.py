@@ -113,7 +113,7 @@ class Sensor(Generic[T]):
         return self._cords
 
     @position.setter
-    def set_position(self, cords: Coordinates) -> None:
+    def position(self, cords: Coordinates) -> None:
         """
         Set the position of the sensor.
 
@@ -186,7 +186,7 @@ class Sensor(Generic[T]):
         Send a message to a specific sensor.
 
         Args:
-            to_sensor (Sensor): The target sensor to send the message to
+            to_sensor (Sensor[T]): The target sensor to send the message to
             values (list[float]): List of numerical values to transmit
         """
         if len(values) == 0:
@@ -196,7 +196,7 @@ class Sensor(Generic[T]):
             self._sensor_manager._mark_transmission(self.id, to_sensor.id)
         to_sensor._write_to_transmit_buffer(values)
 
-    def broadcast(self, values: list[float] | list[float]):
+    def broadcast(self, values: list[float]):
         """
         Broadcast a message to all neighboring sensors.
 

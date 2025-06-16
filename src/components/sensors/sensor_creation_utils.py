@@ -1,3 +1,10 @@
+"""
+Utility functions for creating and initializing sensors in the GeoNet framework.
+
+This module provides convenient functions for creating multiple sensors with
+randomized positions and configurations, simplifying the setup of sensor networks.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Callable
