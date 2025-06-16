@@ -2,7 +2,7 @@ from enum import Enum, auto
 from typing import Any
 
 from examples.boundary_estimation.scenarios import load_random_scenario
-from src.components.sensors.sensor import Sensor, create_sensors
+from src.components.sensors.sensor import Sensor
 from src.components.sensors.sensor_connection_utils import (
     gg_connection,
 )
@@ -79,15 +79,13 @@ def on_update(manager: SensorManager, patches: PatchesGrid, global_state: Any) -
 
 
 def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
-    sensors = create_sensors(
+    sensors = manager.create_sensors(
         amount=90,
-        grid=patches,
         initial_state={"current_state": State.INIT, "send": False},
         on_receive=on_receive,
     )
     for sensor in sensors:
         sensor.color = Color.CREAM
-    manager.append_multiple_sensors(sensors)
     manager.connect_sensors_if(sensors, gg_connection(sensors))
 
     global_state = {"count": 0}

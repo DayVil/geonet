@@ -3,16 +3,19 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from copy import deepcopy
 from itertools import combinations
-from typing import Any
+from typing import Any, TypeVar
 import uuid
 
 import networkx as nx
 import pygame
 
-from src.components.sensors.sensor import Sensor
+from src.components.sensors.sensor import Sensor, create_sensors
 from src.components.sensors.sensor_math import euclid_distance
 from src.engine.geo_color import Color
 from src.engine.grid import PatchesGrid
+
+
+T = TypeVar("T")
 
 
 class SensorManager:
@@ -40,7 +43,7 @@ class SensorManager:
             grid (PatchesGrid): The grid system to manage sensors on
         """
         self._nx_graph = nx.Graph()
-        self._grid = grid
+        self._grid: PatchesGrid = grid
 
     # =======================
     # Information retrieval methods
@@ -92,6 +95,23 @@ class SensorManager:
     # =======================
     # Sensor management methods
     # =======================
+    def create_sensors(
+        self,
+        amount: int,
+        initial_state: T,
+        on_receive: Callable[[Sensor[T], list[float]], None] | None = None,
+        on_measurement_change: Callable[[Sensor[T], Color], None] | None = None,
+    ) -> list[Sensor[T]]:
+        sensors = create_sensors(
+            amount,
+            self._grid,
+            initial_state,
+            on_receive,
+            on_measurement_change,
+        )
+        self.append_multiple_sensors(sensors)
+        return sensors
+
     def append_sensor(self, sensor: Sensor) -> None:
         """
         Add a sensor to the network.
@@ -103,7 +123,7 @@ class SensorManager:
             sensor._sensor_manager = self
             self._nx_graph.add_node(sensor.id, sensor=sensor)
 
-    def append_multiple_sensors(self, sensors: Sequence[Sensor]) -> None:
+    def append_multiple_sensors(self, sensors: list[Sensor[T]]) -> None:
         """
         Add multiple sensors to the network.
 

@@ -2,10 +2,8 @@ from enum import Enum, auto
 from typing import Any
 
 from examples.boundary_estimation.scenarios import load_random_scenario
-from src.components.sensors.sensor import Sensor, create_sensors
-from src.components.sensors.sensor_connection_utils import (
-    gg_connection,
-)
+from src.components.sensors.sensor import Sensor
+from src.components.sensors.sensor_connection_utils import gg_connection
 from src.components.sensors.sensor_manager import SensorManager
 from src.engine.geo_color import Color
 from src.engine.geonet import GeoNetConfig, GeoNetEngine
@@ -51,13 +49,11 @@ def on_receive(sensor: Sensor, values: list[float]) -> None:
 
 def setup(manager: SensorManager, patches: PatchesGrid, global_state: Any) -> Any:
     load_random_scenario(patches)
-    sensors = create_sensors(
+    sensors = manager.create_sensors(
         amount=150,
-        grid=patches,
         initial_state=(State.INIT, False, patches),
         on_receive=on_receive,
     )
-    manager.append_multiple_sensors(sensors)
     manager.connect_sensors_if(sensors, gg_connection(sensors))
 
     for sensor in sensors:
