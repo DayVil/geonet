@@ -159,6 +159,27 @@ class SensorManager:
         for sensor in sensors:
             self.append_sensor(sensor)
 
+    def remove_sensor(self, sensor: Sensor[T]) -> None:
+        """
+        Remove a sensor from the network.
+
+        Args:
+            sensor (Sensor[T]): The sensor to remove from the network
+        """
+        if sensor.id in self._nx_graph:
+            sensor._sensor_manager = None
+            self._nx_graph.remove_node(sensor.id)
+
+    def remove_multiple_sensors(self, sensors: list[Sensor[T]]) -> None:
+        """
+        Remove multiple sensors from the network.
+
+        Args:
+            sensors (list[Sensor[T]]): The sensors to remove from the network
+        """
+        for sensor in sensors:
+            self.remove_sensor(sensor)
+
     # =======================
     # Connection management methods
     # =======================
@@ -191,8 +212,6 @@ class SensorManager:
                 weight=dist,
                 is_transmitting=False,
             )
-            sensor1._neighbour.add(sensor2)
-            sensor2._neighbour.add(sensor1)
 
     def disconnect_sensors(self, sensor1: Sensor[T], sensor2: Sensor[T]) -> None:
         """
@@ -209,8 +228,6 @@ class SensorManager:
             self.append_sensor(sensor2)
 
         self._nx_graph.remove_edge(sensor1.id, sensor2.id)
-        sensor1._neighbour.remove(sensor2)
-        sensor2._neighbour.remove(sensor1)
 
     def disconnect_multiple_sensors(self, sensors: Sequence[Sensor[T]]) -> None:
         """

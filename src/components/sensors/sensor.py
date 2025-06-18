@@ -85,7 +85,7 @@ class Sensor(Generic[T]):
         self._state: T = deepcopy(initial_state)
         self._current_patch_color = self._grid.get_color(self._cords)
 
-        self._neighbour: set[Sensor[T]] = set()
+        # self._neighbour: set[Sensor[T]] = set()
 
         self._sensor_manager: SensorManager | None = None
 
@@ -133,7 +133,25 @@ class Sensor(Generic[T]):
         Returns:
             list[Sensor[T]]: List of sensors connected to this sensor
         """
-        return list(self._neighbour)
+        # if self._sensor_manager is None:
+        #     return []
+        # return [
+        #     data["sensor"]
+        #     for _, data in self._sensor_manager._nx_graph.nodes(data=True)
+        # ]
+        if self._sensor_manager is None:
+            return []
+
+        if self.id not in self._sensor_manager._nx_graph:
+            return []
+
+        graph = self._sensor_manager._nx_graph
+        connected_sensors: list[Sensor[T]] = []
+        for neighbor_id in graph.neighbors(self.id):
+            neighbor_sensor: Sensor[T] = graph.nodes[neighbor_id]["sensor"]
+            connected_sensors.append(neighbor_sensor)
+
+        return connected_sensors
 
     @property
     def state(self) -> T:
