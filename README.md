@@ -1,51 +1,89 @@
-# GeoNet
+<!----------------------------------- BEG ----------------------------------->
+<br>
+<div align="center">
+    <p>
+        <img src="https://raw.githubusercontent.com/DayVil/geonet/main/docs/icon.png" alt="GeoNet" width="1000" />
+    </p>
+</div>
+
 <p align="center">
-  <img src="docs/icon.png" alt="GeoNet Logo" width="180"/>
+    <img src="https://img.shields.io/badge/version-0.0.2-blue.svg" alt="Version" />
+    <img src="https://img.shields.io/github/issues/Dayvil/geonet?style=flat" alt="Github Repo Issues" />
+    <a href="https://github.com/Dayvil/geonet/blob/main/LICENSE">
+        <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license" />
+    </a>
+    <img src="https://img.shields.io/github/stars/Dayvil/geonet?style=social" alt="GitHub Repo stars" />
 </p>
+
+<p align="center">
+    <b>
+        Simulating sensor networks with real-time behavior
+    </b>
+</p>
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/maysara-elshewehy/SuperZIG-assets/refs/heads/main/dist/img/md/line.png" alt="line" style="display: block; margin-top:20px;margin-bottom:20px;width:500px;"/>
+    <br>
+</div>
+<!--------------------------------------------------------------------------->
 
 A Python-based sensor network simulation framework with real-time visualization capabilities. GeoNet allows you to create, simulate, and visualize sensor networks with various connection topologies and communication patterns.
 
+## What GeoNet Tries to Do
+
+- **Simplifying Real-Time Decentralized Network Simulation**: Provides an intuitive framework for modeling distributed sensor networks with real-time behavior
+- **Easy API**: Offers a straightforward interface for creating, configuring, and managing sensor networks without complexity
+- **Sensor and Grid Editing**: Enables interactive modification of sensor properties and grid configurations during simulation
+
+## What GeoNet Doesn't Try to Do
+
+- **No Graph Plotting**: Focuses on network simulation rather than data visualization - use dedicated tools like matplotlib for plotting
+- **Not Hot Reloadable**: Designed for complete simulation runs rather than live code modification
+- **No High Definition Graphics**: Prioritizes performance and clarity over visual sophistication
+
 ## Table of Contents
 
-- [GeoNet](#geonet)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Installation](#installation)
-    - [Dependencies](#dependencies)
-  - [Quick Start](#quick-start)
-    - [Basic Network Example](#basic-network-example)
-  - [Examples](#examples)
-    - [Basic Examples](#basic-examples)
-    - [Advanced Examples](#advanced-examples)
-    - [Demonstrations](#demonstrations)
-  - [Architecture](#architecture)
-    - [Core Components](#core-components)
-      - [Engine (`/src/engine/`)](#engine-srcengine)
-      - [Sensors (`/src/components/sensors/`)](#sensors-srccomponentssensors)
-      - [Components (`/src/components/`)](#components-srccomponents)
-    - [Connection Types](#connection-types)
-  - [Configuration](#configuration)
-  - [Interactive Controls](#interactive-controls)
-  - [Sensor Programming](#sensor-programming)
-    - [Creating Sensors](#creating-sensors)
-    - [Sensor Communication](#sensor-communication)
-    - [Connection Patterns](#connection-patterns)
-  - [Development](#development)
-    - [Code Style](#code-style)
-    - [Project Structure](#project-structure)
-  - [Contributing](#contributing)
-  - [License](#license)
-  - [Research Applications](#research-applications)
-  - [Support](#support)
+- [What GeoNet Tries to Do](#what-geonet-tries-to-do)
+- [What GeoNet Doesn't Try to Do](#what-geonet-doesnt-try-to-do)
+- [Table of Contents](#table-of-contents)
+- [Features](#features)
+- [Installation](#installation)
+  - [Dependencies](#dependencies)
+- [Quick Start](#quick-start)
+  - [Basic Network Example](#basic-network-example)
+- [Examples](#examples)
+  - [Basic Examples](#basic-examples)
+  - [Advanced Examples](#advanced-examples)
+  - [Demonstrations](#demonstrations)
+- [Architecture](#architecture)
+  - [Core Components](#core-components)
+    - [Engine (`/src/engine/`)](#engine-srcengine)
+    - [Sensors (`/src/components/sensors/`)](#sensors-srccomponentssensors)
+    - [Components (`/src/components/`)](#components-srccomponents)
+  - [Connection Types](#connection-types)
+- [Configuration](#configuration)
+- [Interactive Controls](#interactive-controls)
+- [Sensor Programming](#sensor-programming)
+  - [Creating Sensors](#creating-sensors)
+  - [Sensor Communication](#sensor-communication)
+  - [Connection Patterns](#connection-patterns)
+- [Development](#development)
+  - [Code Style](#code-style)
+  - [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Research Applications](#research-applications)
+- [Support](#support)
 
 ## Features
 
-- **Real-time Visualization**: Interactive pygame-based visualization of sensor networks
+- **Simplified Real-time Decentralized Network Simulation**: Intuitive framework for modeling distributed sensor networks with live behavior and communication
+- **Easy-to-Use API**: Straightforward interface for creating, configuring, and managing sensor networks without unnecessary complexity
+- **Interactive Sensor and Grid Editing**: Real-time modification of sensor properties, states, and grid configurations during simulation
 - **Multiple Connection Types**: Support for Unit Disk Graph (UDG), Gabriel Graph (GG), and custom connection patterns
-- **Event-driven Simulation**: Sensors can transmit data, change states, and respond to events
-- **Configurable Parameters**: Customizable grid size, update intervals, display settings, and more
-- **Interactive Controls**: Click on sensors to inspect their state
-- **Extensible Architecture**: Easy to add new sensor behaviors and connection algorithms
+- **Event-driven Architecture**: Sensors can transmit data, change states, and respond to events in real-time
+- **Configurable Parameters**: Customizable grid size, update intervals, display settings optimized for performance over high-definition graphics
+- **Extensible Framework**: Easy to add new sensor behaviors and connection algorithms while maintaining simplicity
 
 ## Installation
 
