@@ -2,7 +2,7 @@
 <br>
 <div align="center">
     <p>
-        <img src="https://raw.githubusercontent.com/DayVil/geonet/main/docs/icon.png" alt="GeoNet" width="1000" />
+        <img src="https://raw.githubusercontent.com/DayVil/geonet/main/docs/icon.png" alt="GeoNet" width="500" />
     </p>
 </div>
 
